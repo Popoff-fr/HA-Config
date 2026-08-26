@@ -1,0 +1,199 @@
+#########################################
+#          Energy Consommation         ##
+#########################################
+
+#########################################
+template:
+  - sensor: #Capteur compatible dashboard energy
+# calcul power export
+      - name: energy_exporting
+        state: "{{ (max(states('sensor.production_solaire_instantanee') | float(default=0) - states('sensor.moyenne_consommation_electrique') | float(default=0), 0) / 1000) | round(2) }}"
+        unit_of_measurement: 'kWh'
+        device_class: energy
+        #state_class: total_increasing
+        icon: 'mdi:flash'
+        unique_id: 'énergy_export'
+
+      - name: energy_exporting_wh
+        state: "{{ max(states('sensor.production_solaire_instantanee') | float(default=0) - states('sensor.moyenne_consommation_electrique') | float(default=0), 0) | round(2) }}"
+        unit_of_measurement: 'Wh'
+        device_class: energy
+        state_class: total_increasing
+        icon: 'mdi:flash'
+        unique_id: 'énergy_export_wh'        
+
+#      # calcul power import (consomation live) - (production PV Live)
+#      - name: energy_importing
+#        state: "{{ states.sensor.linky_sinsts.state |float(default=0) | round(2) }}"
+#        unit_of_measurement: 'kWh'
+#        device_class: energy
+#        state_class: total_increasing
+#        icon: 'mdi:flash'
+
+
+# Création capteur statistics energy "daily_energy_export"        
+      - name: daily_energy_exported
+        state: "{{ states.input_number.daily_export.state |float(0) |round(2) }}"
+        unit_of_measurement: 'kWh'
+        device_class: energy
+        state_class: total_increasing
+        icon: 'mdi:flash'        
+
+
+
+##############################################################################
+###     Consommation Moyenne Electrique Corrigée
+##############################################################################
+      - name: "consommation_electrique_corrigee"
+        unique_id: "Consommation électrique corrigée"
+        unit_of_measurement: "Wh"
+        state: >-
+          {% set consommation_reseau = states('sensor.linky_sinsts')|float(default=0) %}
+          {% set production_solaire = states('sensor.production_solaire_instantanee')|float(default=0) %}
+          {% set moyenne_consommation_horssolaire = states('sensor.moyenne_conso_linky')|float(default=0) %}
+          {% set consommation_corrigee = states('sensor.consommation_electrique_corrigee')|float(default=0) %}
+          {% set last_updated_ecu = states.sensor.production_solaire_instantanee.last_updated %}
+          {% set last_updated_linky = states.sensor.linky_sinsts.last_updated %}
+          {% set minutes_since_update_ecu = ((as_timestamp(now()) - as_timestamp(last_updated_ecu)) / 60)|int(default=0) %}
+          {% set minutes_since_update_linky = ((as_timestamp(now()) - as_timestamp(last_updated_linky)) / 60)|int(default=0) %}
+          {% if production_solaire > 0 %}
+            {% if minutes_since_update_ecu <= 15 %}
+              {% if consommation_reseau > 0 %}
+                {% set consommation_corrigee = production_solaire + consommation_reseau %}
+                {% if 0.70 * moyenne_consommation_horssolaire <= consommation_corrigee <= 1.30 * moyenne_consommation_horssolaire %}
+                  {% set consommation_corrigee = consommation_corrigee %}
+                {% elif 1.3 * moyenne_consommation_horssolaire < consommation_corrigee < 2 * moyenne_consommation_horssolaire %}
+                  {% set consommation_corrigee = consommation_reseau %} 
+                {% elif consommation_corrigee >= 2 * moyenne_consommation_horssolaire %}
+                  {% set consommation_corrigee = consommation_corrigee %}
+                {% else %}
+                  {% set consommation_corrigee = moyenne_consommation_horssolaire %}
+                {% endif %}
+              {% elif consommation_reseau == 0 %}
+                {% if moyenne_consommation_horssolaire > 0 %}
+                  {% set consommation_corrigee = moyenne_consommation_horssolaire * (1 + (production_solaire / moyenne_consommation_horssolaire) * 0.15) %}
+                {% else %}
+                  {% set consommation_corrigee = production_solaire %}
+                {% endif %}
+              {% endif %}
+            {% else %}
+              {{ moyenne_consommation_horssolaire }}
+            {% endif %}
+          {% elif production_solaire == 0 %}
+            {% if minutes_since_update_linky <= 15 %}
+              {% set consommation_corrigee = consommation_reseau %}
+            {% endif %}
+          {% endif %}          
+          {{ consommation_corrigee }}
+
+
+        
+#######################
+##    EDF - linky   ##     # Calcul du prix avec le capteur linky utility_meter
+#######################
+      - name: "edf_tarif_daily"
+        unique_id: Prix kWh Journalier
+        unit_of_measurement: €
+        state: "{{ (states('sensor.edf_total_daily') | float(default=0) * 0.228) | round(1) }}"
+        icon: 'mdi:flash'
+        
+      #- name: "monthlylastyear_energy_price"
+      #  unique_id: Prix kWh mensuel N-1/N
+      #  unit_of_measurement: €
+      #  state: "{{ states('sensor.myelectricaldata_current_month_last_year') | float(default=0) * 0.2062 | round(2) }}"
+      #  icon: 'mdi:flash'
+
+      #- name: "myelectricaldata_current_month"
+      #  unique_id: 'myelectricdata current month'
+      #  state: "{{ (state_attr('sensor.linky_01437047692840_consumption', 'current_month')) }}"
+      #  device_class: energy
+      #  unit_of_measurement: 'kWh'
+      #  icon: 'mdi:flash'
+
+      #- name: "myelectricaldata_current_month_last_year"
+      #  unique_id: 'myelectricdata current month last month'
+      #  state: "{{ (state_attr('sensor.linky_01437047692840_consumption', 'current_month_last_year')) }}"
+      #  device_class: energy
+      #  unit_of_measurement: 'kWh'
+      #  icon: 'mdi:flash'
+
+# Création de valeur moyenne statistics
+sensor:
+  - platform: statistics
+    entity_id: sensor.consommation_electrique_corrigee #capteur de mesure de consommation_electrique_corrigee
+    name: "Moyenne consommation électrique" #nom du capteur final
+    #sampling_size: 576 #288
+    max_age:
+      minutes: 10
+    state_characteristic: mean
+
+  - platform: statistics
+    entity_id: sensor.linky_sinsts #capteur linky lissé sur 1 journée avec influance de production solaire
+    name: "Moyenne conso linky" #nom du capteur final
+    #sampling_size: 2880 #288
+    max_age:
+      hours: 30
+    state_characteristic: mean
+    
+
+    ##################################
+    ### Moyenne energy hours export ##
+    ##################################
+
+  - platform: statistics
+    entity_id: sensor.energy_exporting #capteur energy exporté moyenne /1h = (solaire - consommation_electrique_corrigee)
+    name: "hours energy exporting" #nom du capteur final
+    max_age: 
+      hours: 1
+    state_characteristic: mean
+    #sampling_size: 1 #nombre échantillonage
+
+#######################
+##  Automatisation   ##      
+#######################
+# Releve la valeur exportée moyenne dans l'heure et ajoute la valeur à la précedente dans un input_number
+
+
+automation:
+  alias: "[Update] daily exporté"
+  id: Dailly exporté
+  description: ""
+  trigger:
+    - platform: time_pattern
+      minutes: "59"
+  condition:
+    - condition: template
+      value_template: "{{ now().minute == 59 }}"
+  action:
+    - service: input_number.set_value
+      data_template:
+        value: >-
+          {{ (states('input_number.daily_export') | float(0) |round(2)) + (states('sensor.hours_energy_exporting') | float(0) |round(2)) }}
+      target:
+        entity_id: input_number.daily_export
+  mode: single
+
+#######################
+##   input_number     ##      
+#######################
+input_number:
+  daily_export:
+    name: daily_export
+    initial: 0
+    min: 0
+    max: 9999
+
+# Utility Meters pour historisation
+utility_meter:
+  edf_total_daily:
+    source: sensor.linky_east
+    cycle: daily
+  edf_total_weekly:
+    source: sensor.linky_east
+    cycle: weekly
+  edf_total_monthly:
+    source: sensor.linky_east
+    cycle: monthly
+  edf_total_yearly:
+    source: sensor.linky_east
+    cycle: yearly

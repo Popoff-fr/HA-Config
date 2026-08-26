@@ -1,0 +1,12 @@
+- sensor:
+    - name: Pluie du Jour
+      state_class: measurement
+      unique_id: pluie_du_jour
+      unit_of_measurement: mm
+      icon: mdi:weather-pouring
+      state: >-
+        {% set count = (states('sensor.pluviometre_on') | int(0)) + (states('sensor.apluviometre_off') | int(0)) %}
+        {% set mm = count * 0.52615 %}
+        {% if count >= 0 %}
+          {{ mm|round(1, 'floor') }}
+        {% endif %}

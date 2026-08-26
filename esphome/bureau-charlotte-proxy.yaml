@@ -1,0 +1,44 @@
+esphome:
+  name: "bureau-charlotte-proxy"
+  friendly_name: Bureau2-Proxy
+  name_add_mac_suffix: false
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: !secret wifi_ssid_routeur
+  password: !secret wifi_password_routeur
+  manual_ip:
+    static_ip: 192.168.2.183
+    gateway: 192.168.2.1
+    subnet: 255.255.255.0
+
+api:
+  encryption:
+    key: "DFhfagal2LUb+qh0ZzHE3o7MNIAeD4vjfeLWI9NdmG4="
+
+logger:
+
+ota:
+  platform: esphome
+  password: "f9bb98b714c72c8ed80c2052ef91bc11"
+improv_serial:
+
+esp32_ble:
+  max_connections: 4
+
+esp32_ble_tracker:
+  scan_parameters:
+    interval: 1100ms
+    window: 1100ms
+    active: false
+
+bluetooth_proxy:
+  active: true
+
+button:
+  - platform: restart
+    name: "Redémarrer proxy"

@@ -1,0 +1,32 @@
+esphome:
+  name: yuk
+  friendly_name: Yuk
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "iccn/UpbmJUyTEoaG7ghmysJ4UnRQhvJQM59AnCet8E="
+
+ota:
+  - platform: esphome
+    password: "c4506ad8af4965a7bc4ad1ccea2dde99"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Yuk Fallback Hotspot"
+    password: "yYx56sI4yDp5"
+
+captive_portal:
+    

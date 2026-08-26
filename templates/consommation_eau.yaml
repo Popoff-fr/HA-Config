@@ -1,0 +1,7 @@
+- sensor:
+    - name: "Consommation eau totale maison"
+      unit_of_measurement: "m³"
+      device_class: water
+      state_class: total_increasing
+      state: >
+        {{ states('sensor.compteur_eau_total_volume') | float(0) / 1000 + 1803.80 }}

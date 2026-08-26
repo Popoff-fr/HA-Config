@@ -1,0 +1,178 @@
+tondre_zone_forsythia:
+  sequence:
+  - action: mammotion.start_mow
+    target:
+      entity_id: lawn_mower.coupe_coupe
+    data:
+      is_mow: true
+      is_dump: false
+      speed: 0.2
+      rain_tactics: 1
+      mowing_laps: 3
+      areas:
+      - switch.coupe_coupe_zone_forsythia
+      is_edge: true
+      channel_mode: '0'
+      obstacle_laps: 0
+      channel_width: 9
+      toward: 37
+      ultra_wave: '2'
+  alias: Tondre Zone Forsythia
+  description: ''
+tondre_zone_fontaine:
+  sequence:
+  - action: mammotion.start_mow
+    target:
+      entity_id: lawn_mower.coupe_coupe
+    data:
+      is_mow: true
+      is_dump: false
+      speed: 0.2
+      rain_tactics: 1
+      mowing_laps: 3
+      areas:
+      - switch.coupe_coupe_zone_fontaine
+      is_edge: true
+      channel_mode: 0
+      obstacle_laps: 0
+      ultra_wave: '2'
+      channel_width: 9
+  alias: Tondre Zone Fontaine
+  description: ''
+tondre_zone_lilas:
+  sequence:
+  - action: mammotion.start_mow
+    target:
+      entity_id: lawn_mower.coupe_coupe
+    data:
+      is_mow: true
+      is_dump: false
+      speed: 0.2
+      rain_tactics: 1
+      mowing_laps: 3
+      areas:
+      - switch.coupe_coupe_zone_lilas
+      is_edge: true
+      channel_mode: '0'
+      obstacle_laps: 0
+      ultra_wave: '2'
+      channel_width: 9
+  alias: Tondre Zone Lilas
+  description: ''
+tondre_zone_piscine:
+  sequence:
+  - action: mammotion.start_mow
+    target:
+      entity_id: lawn_mower.coupe_coupe
+    data:
+      is_mow: true
+      is_dump: false
+      speed: 0.2
+      rain_tactics: 1
+      mowing_laps: 3
+      areas:
+      - switch.coupe_coupe_zone_piscine
+      is_edge: true
+      channel_mode: 0
+      obstacle_laps: 0
+      channel_width: 9
+      ultra_wave: '2'
+  alias: Tondre Zone Piscine
+  description: ''
+tondre_zone_romarin:
+  sequence:
+  - action: mammotion.start_mow
+    target:
+      entity_id: lawn_mower.coupe_coupe
+    data:
+      is_mow: true
+      is_dump: false
+      speed: 0.2
+      rain_tactics: 1
+      mowing_laps: 3
+      areas:
+      - switch.coupe_coupe_zone_romarin
+      is_edge: true
+      channel_mode: 0
+      obstacle_laps: 0
+      ultra_wave: 2
+      channel_width: 9
+  alias: Tondre Zone Romarin
+  description: ''
+tondre_toutes_les_zones:
+  sequence:
+  - action: mammotion.start_mow
+    target:
+      entity_id: lawn_mower.coupe_coupe
+    data:
+      is_mow: true
+      is_dump: false
+      speed: 0.2
+      channel_width: 10
+      rain_tactics: 1
+      mowing_laps: 1
+      areas:
+      - switch.coupe_coupe_zone_forsythia
+      - switch.coupe_coupe_zone_fontaine
+      - switch.coupe_coupe_zone_lilas
+      - switch.coupe_coupe_zone_piscine
+      - switch.coupe_coupe_zone_romarin
+      - switch.coupe_coupe_zone_hortensia
+      is_edge: false
+      channel_mode: 0
+      ultra_wave: 2
+      obstacle_laps: 0
+  alias: Tondre Toutes Les Zones
+  description: ''
+tondeuse_retourner_a_la_base:
+  sequence:
+  - action: lawn_mower.dock
+    target:
+      entity_id: lawn_mower.coupe_coupe
+  alias: Tondeuse Retourner à la Base
+  description: ''
+tondeuse_pause:
+  sequence:
+  - action: lawn_mower.pause
+    target:
+      entity_id:
+      - lawn_mower.coupe_coupe
+    data: {}
+  alias: Tondeuse Pause
+  description: ''
+tondeuse_stop:
+  sequence:
+  - action: button.press
+    metadata: {}
+    data: {}
+    target:
+      entity_id: button.coupe_coupe_annuler_la_tache_en_cours
+  alias: Tondeuse Stop
+  description: ''
+tondre_zone_hortensia:
+  sequence:
+  - action: mammotion.start_mow
+    target:
+      entity_id: lawn_mower.coupe_coupe
+    data:
+      is_mow: true
+      is_dump: false
+      speed: 0.2
+      rain_tactics: 1
+      mowing_laps: 3
+      areas:
+      - switch.coupe_coupe_zone_hortensia
+      is_edge: true
+      channel_mode: 0
+      obstacle_laps: 0
+      ultra_wave: 2
+      channel_width: 8
+  alias: Tondre Zone Hortensia
+  description: ''
+demarrer_tonte:
+  sequence:
+  - action: mammotion.start_mow
+    target:
+      entity_id: lawn_mower.coupe_coupe
+  alias: Démarrer Tonte
+  description: ''

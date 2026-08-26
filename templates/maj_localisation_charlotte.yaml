@@ -1,0 +1,9 @@
+- device_tracker:
+    - name: "Suivi Charlotte"
+      unique_id: suivi_charlotte_device_tracker
+      in_zones: >
+        {% if states('sensor.sm_g781b_wifi_connection') in ['Charlotte&Damien', 'Charlotte&DamienExt2.4'] %}
+          {{ ['zone.home'] }}
+        {% else %}
+          {{ [] }}
+        {% endif %}

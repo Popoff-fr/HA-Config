@@ -1,0 +1,40 @@
+order:
+  - item: hacs
+    bottom: true
+    order: 0
+
+  - item: Studio Code Server
+    bottom: true
+    order: 1
+
+  - item: File Editor
+    bottom: true
+    order: 2
+
+  - item: logbook
+    hide: true
+  - new_item: true
+    item: "Clear Frontend Cache"
+    icon: "mdi:cached"
+    bottom: true
+    order: 3
+    on_click:
+      action: 'javascript'
+      code: |
+        const event = new CustomEvent(
+          'll-custom',
+          {
+            detail: {
+              uix: {
+                action: 'clear_cache'
+              }
+            }
+          }
+        );
+        document.dispatchEvent(event);  
+  - new_item: true
+    item: "Outils de développement"
+    icon: "mdi:tools"
+    href: "/config/developer-tools"
+    bottom: true
+    order: 4

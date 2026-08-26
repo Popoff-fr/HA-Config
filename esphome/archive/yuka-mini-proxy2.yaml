@@ -1,0 +1,32 @@
+esphome:
+  name: yuka-mini-proxy2
+  friendly_name: Yuka-Mini-Proxy2
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "LvI4QCPEU5d2oCRkQsifkQeuGnOy5SaaB4tuxq7n2Og="
+
+ota:
+  - platform: esphome
+    password: "5c111a07425119f4c14271b816c5e4b1"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Yuka-Mini-Proxy2"
+    password: "gdfwyDGpjhvc"
+
+captive_portal:
+    

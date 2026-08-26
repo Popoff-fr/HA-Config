@@ -1,0 +1,4807 @@
+- id: '1679161773508'
+  alias: Détection Fumée Salon
+  description: ''
+  triggers:
+  - type: smoke
+    device_id: bf9be7d178261b82e344454bff26ce30
+    entity_id: binary_sensor.detecteur_fumee_smoke
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: bf9be7d178261b82e344454bff26ce30
+    entity_id: f696305cbe0ff9b2dcbfbd0c70ed623e
+    domain: switch
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      data:
+        notification_icon: mdi:fire-alert
+      message: Fumée Détectée dans le salon
+      title: Fumée Détectée !!!
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      message: Fumée Détectée dans le salon
+      title: Fumée Détectée !!!
+      data:
+        notification_icon: mdi:fire-alert
+  - if:
+    - condition: device
+      device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: is_locked
+    then:
+    - device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: unlock
+  mode: single
+- id: '1679161988544'
+  alias: Feu détecté
+  description: ''
+  triggers:
+  - type: temperature
+    device_id: 9f2d9874cebd5507188211e211fd0c37
+    entity_id: sensor.detecteur_feu_temperature
+    domain: sensor
+    above: 40
+    trigger: device
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 9f2d9874cebd5507188211e211fd0c37
+    entity_id: 540f5186bae346650abc13bf0d41f08d
+    domain: switch
+  - device_id: 6a59a64a9eea2ac236a4381a6e2e2a07
+    domain: mobile_app
+    type: notify
+    message: Au feu !!!!
+  - device_id: 12a79500c39768be13ccb4e257e431db
+    domain: mobile_app
+    type: notify
+    message: Au feu !!!!
+  - if:
+    - condition: device
+      device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: is_locked
+    then:
+    - device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: unlock
+  mode: single
+- id: '1683549850230'
+  alias: Démarrage Pompe Piscine Matin
+  description: ''
+  triggers:
+  - at: '10:00:00'
+    trigger: time
+  conditions:
+  - condition: or
+    conditions:
+    - condition: numeric_state
+      entity_id: sensor.moyenne_production_solaire_cabanon_30min
+      above: 700
+    - condition: numeric_state
+      entity_id: sensor.temperature_piscine_temperature
+      above: 25
+    - condition: template
+      value_template: '{{ (as_timestamp(now()) - as_timestamp(states(''input_datetime.date_et_heure_derniere_filtration_piscine'')))|int
+        > 172000 }}'
+  - condition: device
+    type: is_off
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: bd80c77305de665184df92ae840238e8
+    domain: switch
+  - condition: state
+    entity_id: binary_sensor.pac
+    state:
+    - 'off'
+  actions:
+  - type: turn_on
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: switch.pompe_piscine
+    domain: switch
+  mode: single
+- id: '1687956283574'
+  alias: Démarrage Pompe Piscine Après-Midi
+  description: ''
+  triggers:
+  - at: '14:00:00'
+    trigger: time
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.moyenne_production_solaire_cabanon_30min
+    above: 700
+  - condition: device
+    type: is_off
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: bd80c77305de665184df92ae840238e8
+    domain: switch
+  actions:
+  - type: turn_on
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: switch.pompe_piscine
+    domain: switch
+  mode: single
+- id: '1687956363599'
+  alias: Arrêt Pompe Piscine Après-Midi
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.moyenne_production_solaire_cabanon_30min
+    below: 800
+  conditions:
+  - condition: state
+    entity_id: switch.pompe_piscine
+    state: 'on'
+  - condition: time
+    after: '17:00:00'
+  actions:
+  - type: turn_off
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: switch.pompe_piscine
+    domain: switch
+  - data:
+      entity_id: input_datetime.date_et_heure_derniere_filtration_piscine
+      timestamp: '{{ as_timestamp(now()) }}'
+    action: input_datetime.set_datetime
+  mode: single
+- id: '1715700122612'
+  alias: Détection Salon Damien
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_salon
+      notify_device: 12a79500c39768be13ccb4e257e431db
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/thumbnail.jpg'
+      zones: []
+      zone_filter: false
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{description}}'
+      final_update: true
+      title: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+      final_delay: 15
+- id: '1715805629062'
+  alias: Désactivation Détection Records et Snap
+  description: ''
+  triggers:
+  - entity_id:
+    - group.nous
+    from: not_home
+    to: home
+    trigger: state
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: e0f429a96537a133fad4283ca46062dd
+    domain: switch
+  - type: turn_off
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: 6c56ba365c4dfeb5708824633d3703dc
+    domain: switch
+  - type: turn_off
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 2f92848a19f1ea56c98360337ba8b9ed
+    domain: switch
+  - type: turn_off
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: ad46291776a65f501189444c1adba34c
+    domain: switch
+  - type: turn_off
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: 0937c870f503fb8e544fd74f1817be48
+    domain: switch
+  - type: turn_off
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: 08fc0203b1240983c399e5b756de2edc
+    domain: switch
+  - type: turn_off
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 62ef419e5eaab566336d574a1bd166e2
+    domain: switch
+    enabled: true
+  - type: turn_off
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: a0c2ef5f174dd96e082b3bdb8df81eca
+    domain: switch
+  - type: turn_off
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: 0059cc34ab2137ebead17668932a1d5a
+    domain: switch
+  - type: turn_off
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: 094a04602717a9b32748e39bb5a39b9b
+    domain: switch
+  - type: turn_off
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 3a03237edf138db48daa61f703dc209a
+    domain: switch
+  - type: turn_off
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: 9e88f186b66af4ad309fc36b2fb9be7c
+    domain: switch
+  - type: turn_off
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 2f92848a19f1ea56c98360337ba8b9ed
+    domain: switch
+  - type: turn_off
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: 7ae907405bbf975f83240d0c06ce076f
+    domain: switch
+  - type: turn_off
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: ecc52da085498952ddbdcb67b8bb8dff
+    domain: switch
+  - type: turn_off
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: 698208c2b87ef5de1feb1e181176bd22
+    domain: switch
+  - type: turn_off
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: 8f5afeef4ab97fa344dd119d12b93949
+    domain: switch
+    enabled: true
+  - type: turn_off
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: 3a89ad168cc2bed58e7ae900f7fb7e94
+    domain: switch
+    enabled: true
+  - type: turn_off
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: c292cac396b955a90ab83fc9a0e5e5c9
+    domain: switch
+    enabled: true
+  - type: turn_off
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: 50ef4da6199515c1a70f7b9548f77e06
+    domain: switch
+    enabled: true
+  - type: turn_off
+    device_id: ff10609f983833d7b2fb0d1815198748
+    entity_id: 7612bc3d1a1372f6129bede2b3be99e1
+    domain: switch
+    enabled: true
+  - type: turn_off
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: fe2d216e6bc477cf64501c11545740f3
+    domain: switch
+  - type: turn_off
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: 87548355d90d7654eda822d6e7375ceb
+    domain: switch
+  - type: turn_off
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: 57c0f79e4b9cbd6bae91494d8f04d28a
+    domain: switch
+  - type: turn_off
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: ee931765220b3ba1a67d6397cd3a312d
+    domain: switch
+  - type: turn_off
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 9f14d5211f34fa4d8a28173f8635b843
+    domain: switch
+  - type: turn_off
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 26e16a8d473880cd18db9e7254a64b3f
+    domain: switch
+  - type: turn_off
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 800c79e0415eff4544c4956e4e33e001
+    domain: switch
+  - type: turn_off
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: b5f4275e071823097adab4a73e208087
+    domain: switch
+  - type: turn_off
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: 4624a8b44b394254cf34c97b4149a9d1
+    domain: switch
+  - type: turn_off
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: 2c93f602445af85c9a9ecdda3fbfc394
+    domain: switch
+  - type: turn_off
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: e7fbf04f94f0d1c2469967f482a8b581
+    domain: switch
+  - type: turn_off
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: 4425245df7a8a8edc69ae6b30f713704
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 878c98df1592bb64cab74a5c3a6c6197
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: a076671171cbd42515628bb195f821ec
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 7e0c0100636c9a0b92b2a98df2420208
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: b5a4fc759e14211a9a5c521a8f06d1bf
+    domain: switch
+  mode: single
+- id: '1715806099503'
+  alias: Activer Détection Records et Snap
+  description: ''
+  triggers:
+  - entity_id:
+    - group.nous
+    to: not_home
+    from: home
+    trigger: state
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: e0f429a96537a133fad4283ca46062dd
+    domain: switch
+  - type: turn_on
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: 6c56ba365c4dfeb5708824633d3703dc
+    domain: switch
+  - type: turn_on
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 2f92848a19f1ea56c98360337ba8b9ed
+    domain: switch
+  - type: turn_on
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: ad46291776a65f501189444c1adba34c
+    domain: switch
+  - type: turn_on
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: 0937c870f503fb8e544fd74f1817be48
+    domain: switch
+  - type: turn_on
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: 08fc0203b1240983c399e5b756de2edc
+    domain: switch
+  - type: turn_on
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 62ef419e5eaab566336d574a1bd166e2
+    domain: switch
+  - type: turn_on
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: a0c2ef5f174dd96e082b3bdb8df81eca
+    domain: switch
+  - type: turn_on
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: 0059cc34ab2137ebead17668932a1d5a
+    domain: switch
+  - type: turn_on
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: 094a04602717a9b32748e39bb5a39b9b
+    domain: switch
+  - type: turn_on
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 3a03237edf138db48daa61f703dc209a
+    domain: switch
+  - type: turn_on
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: 9e88f186b66af4ad309fc36b2fb9be7c
+    domain: switch
+  - type: turn_on
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 5123617e75f4fcd6fc4db2fa755448d8
+    domain: switch
+  - type: turn_on
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: 7ae907405bbf975f83240d0c06ce076f
+    domain: switch
+  - type: turn_on
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: ecc52da085498952ddbdcb67b8bb8dff
+    domain: switch
+  - type: turn_on
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: 698208c2b87ef5de1feb1e181176bd22
+    domain: switch
+  - type: turn_on
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: 8f5afeef4ab97fa344dd119d12b93949
+    domain: switch
+    enabled: true
+  - type: turn_on
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: 3a89ad168cc2bed58e7ae900f7fb7e94
+    domain: switch
+    enabled: true
+  - type: turn_on
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: c292cac396b955a90ab83fc9a0e5e5c9
+    domain: switch
+    enabled: true
+  - type: turn_on
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: 50ef4da6199515c1a70f7b9548f77e06
+    domain: switch
+    enabled: true
+  - type: turn_on
+    device_id: ff10609f983833d7b2fb0d1815198748
+    entity_id: 7612bc3d1a1372f6129bede2b3be99e1
+    domain: switch
+    enabled: true
+  - type: turn_on
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: fe2d216e6bc477cf64501c11545740f3
+    domain: switch
+  - type: turn_on
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: 87548355d90d7654eda822d6e7375ceb
+    domain: switch
+  - type: turn_on
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: 57c0f79e4b9cbd6bae91494d8f04d28a
+    domain: switch
+  - type: turn_on
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: ee931765220b3ba1a67d6397cd3a312d
+    domain: switch
+  - type: turn_on
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 9f14d5211f34fa4d8a28173f8635b843
+    domain: switch
+  - type: turn_on
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 26e16a8d473880cd18db9e7254a64b3f
+    domain: switch
+  - type: turn_on
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 800c79e0415eff4544c4956e4e33e001
+    domain: switch
+  - type: turn_on
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: b5f4275e071823097adab4a73e208087
+    domain: switch
+  - type: turn_on
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: 4624a8b44b394254cf34c97b4149a9d1
+    domain: switch
+  - type: turn_on
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: 2c93f602445af85c9a9ecdda3fbfc394
+    domain: switch
+  - type: turn_on
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: e7fbf04f94f0d1c2469967f482a8b581
+    domain: switch
+  - type: turn_on
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: 4425245df7a8a8edc69ae6b30f713704
+    domain: switch
+  - type: turn_on
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 878c98df1592bb64cab74a5c3a6c6197
+    domain: switch
+  - type: turn_on
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: a076671171cbd42515628bb195f821ec
+    domain: switch
+  - type: turn_on
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 7e0c0100636c9a0b92b2a98df2420208
+    domain: switch
+  - type: turn_on
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: b5a4fc759e14211a9a5c521a8f06d1bf
+    domain: switch
+  mode: single
+- id: '1715806312146'
+  alias: Détection Salle à Manger Damien
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_salle_a_manger
+      notify_device: 12a79500c39768be13ccb4e257e431db
+      attachment: snapshot.jpg
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+- id: '1715806368646'
+  alias: Détection Bureau Charlotte Damien
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_bureau_charlotte
+      notify_device: 12a79500c39768be13ccb4e257e431db
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg'
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      presence_filter:
+      - ''
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }}.'
+      final_update: true
+- id: '1715806663576'
+  alias: Détection Bureau Charlotte Charlotte
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_bureau_charlotte
+      notify_device: 6a59a64a9eea2ac236a4381a6e2e2a07
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg'
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} .'
+      final_update: true
+- id: '1715806707378'
+  alias: Détection Cour Charlotte
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_cour
+      notify_device: 6a59a64a9eea2ac236a4381a6e2e2a07
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/thumbnail.jpg'
+      critical: 'true'
+      zones:
+      - entree_humains
+      - entree_animaux
+      zone_multi: false
+      zone_filter: true
+      color: steelblue
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      presence_filter:
+      - ''
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Damien'' if label == ''Damien'' else ''Une personne'' if label
+        == ''Person'' else ''Un chien'' if label==''Dog'' else ''Minouche'' if label==''Cat''}}
+        {{''a été détectée'' if label==''Person'' else ''a été détecté'' if label==''Dog''
+        or ''Cat'' }} sur la {{ camera_name }} '
+      attachment_2: ''
+      final_update: true
+- id: '1715806812212'
+  alias: Détection Salle à Manger Charlotte
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_salle_a_manger
+      notify_device: 6a59a64a9eea2ac236a4381a6e2e2a07
+      attachment: snapshot.jpg
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+- id: '1715806847877'
+  alias: Détection Salon Charlotte
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_salon
+      notify_device: 6a59a64a9eea2ac236a4381a6e2e2a07
+      attachment: snapshot.jpg
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+- id: '1716578348816'
+  alias: Arrêt Pompe quand PAC marche
+  description: ''
+  triggers:
+  - entity_id:
+    - binary_sensor.pac
+    from: 'off'
+    to: 'on'
+    trigger: state
+  conditions:
+  - condition: device
+    type: is_on
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: bd80c77305de665184df92ae840238e8
+    domain: switch
+  actions:
+  - type: turn_off
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: bd80c77305de665184df92ae840238e8
+    domain: switch
+  - data:
+      timestamp: '{{ as_timestamp(now()) }}'
+    action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.date_et_heure_derniere_filtration_piscine
+  mode: single
+- id: '1716582599335'
+  alias: Démarrage Pompe quand PAC arrêt
+  description: ''
+  triggers:
+  - entity_id:
+    - binary_sensor.pac
+    from: 'on'
+    to: 'off'
+    trigger: state
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.moyenne_production_solaire_cabanon_30min
+    above: 700
+  actions:
+  - type: turn_on
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: bd80c77305de665184df92ae840238e8
+    domain: switch
+  mode: single
+- id: '1716734562491'
+  alias: Arrêt Pompe Piscine Après-Midi Manque Soleil
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.moyenne_production_solaire_cabanon_30min
+    below: 700
+    trigger: numeric_state
+  conditions:
+  - condition: state
+    entity_id: switch.pompe_piscine
+    state: 'on'
+  actions:
+  - type: turn_off
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: bd80c77305de665184df92ae840238e8
+    domain: switch
+  - data:
+      entity_id: input_datetime.date_et_heure_derniere_filtration_piscine
+      timestamp: '{{ as_timestamp(now()) }}'
+    action: input_datetime.set_datetime
+  mode: single
+- id: '1717845435806'
+  alias: Allumer Lampe Etendage
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: 89eec3619985bbadae2a599564748f73
+    entity_id: 090e3189556fddccdcb656a886f5c7a8
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - type: turn_on
+    device_id: 8bd65c7d4c57f34d0a0a577aec1b8563
+    entity_id: baea000c4c8f6688637fd3dfdd0c9646
+    domain: light
+  mode: single
+- id: '1717845678872'
+  alias: Eteindre Lampe Etendage
+  description: ''
+  triggers:
+  - type: not_occupied
+    device_id: 89eec3619985bbadae2a599564748f73
+    entity_id: 090e3189556fddccdcb656a886f5c7a8
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - type: turn_off
+    device_id: 8bd65c7d4c57f34d0a0a577aec1b8563
+    entity_id: baea000c4c8f6688637fd3dfdd0c9646
+    domain: light
+  mode: single
+- id: '1718138183260'
+  alias: Basculer Bouton Portail
+  description: ''
+  trigger:
+  - platform: device
+    type: turned_on
+    device_id: d5a2d3856a6116af84533b36c78035d6
+    entity_id: 96225b318619dc5bb2070d5e33ff9133
+    domain: switch
+  condition: []
+  action:
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 0
+      milliseconds: 50
+  - type: turn_off
+    device_id: d5a2d3856a6116af84533b36c78035d6
+    entity_id: 96225b318619dc5bb2070d5e33ff9133
+    domain: switch
+  mode: single
+- id: '1718173597296'
+  alias: Ouverture Portail Arrivée C4
+  description: ''
+  triggers:
+  - entity_id: person.damien
+    zone: zone.quartier
+    event: enter
+    trigger: zone
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.ouverture_portail_garage_door_contact
+    state: 'off'
+  - condition: template
+    value_template: '{{ ( as_timestamp(now()) -
+
+
+      as_timestamp(state_attr("automation.ouverture_portail_arrivee_c4",
+
+
+      "last_triggered")) |int(0) ) > 300 }} '
+  - condition: state
+    entity_id: binary_sensor.galaxys25_android_auto
+    state: 'on'
+  actions:
+  - type: turn_on
+    device_id: d5a2d3856a6116af84533b36c78035d6
+    entity_id: 96225b318619dc5bb2070d5e33ff9133
+    domain: switch
+  mode: single
+- id: '1718447254620'
+  alias: Allumer Lampe Entrée
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunset
+    offset: 0
+  condition:
+  - condition: state
+    entity_id: group.nous
+    state: not_home
+  action:
+  - type: turn_on
+    device_id: 892cf20476fa92fcec70fc07861bd107
+    entity_id: 91f8c90fe3a5e6a9ef24b822cb8220b9
+    domain: light
+  mode: single
+- id: '1718640867892'
+  alias: Ouverture Portail Arrivée Damien
+  description: ''
+  triggers:
+  - entity_id:
+    - person.damien
+    to:
+    - Quartier
+    trigger: state
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 2
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.ouverture_portail_garage_door_contact
+    state: 'off'
+  - condition: template
+    value_template: '{{ ( as_timestamp(now()) -
+
+
+      as_timestamp(state_attr("automation.ouverture_portail_arrivee_damien",
+
+
+      "last_triggered")) |int(0) ) > 60 }} '
+  - condition: template
+    value_template: '{{ (as_timestamp(now()) - as_timestamp(states(''input_datetime.date_et_heure_derniere_ouverture_portail'')))|int
+      > 60 }}'
+  - condition: template
+    value_template: '{{ ( as_timestamp(now()) -
+
+
+      as_timestamp(state_attr("automation.basculer_bouton_portail",
+
+
+      "last_triggered")) |int(0) ) > 60 }} '
+  - condition: state
+    entity_id: binary_sensor.galaxys25_android_auto
+    state: 'off'
+  actions:
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 4
+      milliseconds: 0
+    enabled: true
+  - type: turn_on
+    device_id: d5a2d3856a6116af84533b36c78035d6
+    entity_id: 96225b318619dc5bb2070d5e33ff9133
+    domain: switch
+  mode: single
+- id: '1718914728675'
+  alias: Basculer Bouton Porte Garage
+  description: ''
+  trigger:
+  - platform: device
+    type: turned_on
+    device_id: 9435c84d518b27aef2d31ceb799f48dd
+    entity_id: 14fb1d215a8d0c59d24b86751e89043f
+    domain: switch
+  condition: []
+  action:
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 0
+      milliseconds: 50
+  - type: turn_off
+    device_id: 9435c84d518b27aef2d31ceb799f48dd
+    entity_id: 14fb1d215a8d0c59d24b86751e89043f
+    domain: switch
+  mode: single
+- id: '1719247664947'
+  alias: Notification Garage Ouvert Soir
+  description: ''
+  triggers:
+  - at: '21:00:00'
+    trigger: time
+  conditions:
+  - type: is_open
+    condition: device
+    device_id: 9435c84d518b27aef2d31ceb799f48dd
+    entity_id: 5a2c03189f0566d44596389f4e485857
+    domain: binary_sensor
+  actions:
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      data:
+        notification_icon: mdi:garage-open-variant
+        clickAction: /dashboard-mobile/portes
+      message: ATTENTION, la porte de garage est ouverte !
+      title: ⚠️Porte de garage ouverte
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      data:
+        notification_icon: mdi:garage-open-variant
+        clickAction: /dashboard-mobile/portes
+      message: ATTENTION, la porte de garage est ouverte !
+      title: ⚠️Porte de garage ouverte
+  mode: single
+- id: '1723660068854'
+  alias: Allumer Lampe Récupérateur Eau
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: d4277039a3c8d4ba72fc2dfcf4df78c3
+    entity_id: 9307861468a9b9801715f6f77d2f2fa4
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: sun
+    after: sunset
+  actions:
+  - type: turn_on
+    device_id: 5de006bafb90abb4fbc506b43ff52db6
+    entity_id: c24dca6793a549345c3eb1197a7eab99
+    domain: light
+  - type: turn_on
+    device_id: b6c59ad6d03819c96374846ec5e7ee2f
+    entity_id: 07fe0f25e5dd7249961b1bb0b9984517
+    domain: light
+  mode: single
+- id: '1723660157796'
+  alias: Eteindre Lampe Récupérateur Eau
+  description: ''
+  triggers:
+  - type: not_occupied
+    device_id: d4277039a3c8d4ba72fc2dfcf4df78c3
+    entity_id: 9307861468a9b9801715f6f77d2f2fa4
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - type: turn_off
+    device_id: 5de006bafb90abb4fbc506b43ff52db6
+    entity_id: c24dca6793a549345c3eb1197a7eab99
+    domain: light
+  - type: turn_off
+    device_id: b6c59ad6d03819c96374846ec5e7ee2f
+    entity_id: 07fe0f25e5dd7249961b1bb0b9984517
+    domain: light
+  mode: single
+- id: '1724878259327'
+  alias: Courant coupé
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.shelly_phase_edf_puissance
+    from:
+    to:
+    - unavailable
+  conditions: []
+  actions:
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      message: Coupure détectée, il reste {{ (states('sensor.onduleur_eaton_ellipse_pro_650_autonomie_de_la_batterie')
+        | float /60)| round(0) }} minutes d'autonomie sur l'onduleur
+      title: ⚠️ Coupure de courant en cours
+  mode: single
+- id: '1724880223462'
+  alias: Courant rétabli
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.shelly_phase_edf_puissance
+    from:
+    - unavailable
+    to:
+  conditions: []
+  actions:
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      message: L'électricité est de retour !!!
+      title: "\U0001F7E2 Retour du courant"
+  mode: single
+- id: '1725470731114'
+  alias: Décompte Séances Garderie Dépose Charlotte
+  description: ''
+  triggers:
+  - entity_id: person.charlotte
+    zone: zone.garderie
+    event: leave
+    trigger: zone
+  conditions:
+  - condition: time
+    after: 07:15:00
+    before: 08:15:00
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - condition: template
+    value_template: '{{ ( as_timestamp(now()) -
+
+
+      as_timestamp(state_attr("automation.decompte_nombre_seances_garderie_charlotte",
+
+
+      "last_triggered")) |int(0) ) > 43200 }} '
+  actions:
+  - action: counter.decrement
+    metadata: {}
+    data: {}
+    target:
+      entity_id: counter.nombre_de_seances_de_garderie_restantes
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      title: Garderie
+      message: Il reste {{states("counter.nombre_de_seances_de_garderie_restantes")}}
+        séances de Garderie.
+      data:
+        notification_icon: mdi:dog-service
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      title: Garderie
+      message: Il reste {{states("counter.nombre_de_seances_de_garderie_restantes")}}
+        séances de Garderie.
+      data:
+        notification_icon: mdi:dog-service
+  mode: single
+- id: '1725471757555'
+  alias: Décompte Séances Garderie Dépose Damien
+  description: ''
+  triggers:
+  - entity_id: person.damien
+    zone: zone.garderie
+    event: leave
+    trigger: zone
+  conditions:
+  - condition: time
+    after: 07:15:00
+    before: 08:15:00
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - condition: template
+    value_template: '{{ ( as_timestamp(now()) -
+
+
+      as_timestamp(state_attr("automation.decompte_seance_garderie_depose_damien",
+
+
+      "last_triggered")) |int(0) ) > 43200 }} '
+  actions:
+  - action: counter.decrement
+    metadata: {}
+    data: {}
+    target:
+      entity_id: counter.nombre_de_seances_de_garderie_restantes
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      title: Garderie
+      message: Il reste {{states("counter.nombre_de_seances_de_garderie_restantes")}}
+        séances de Garderie.
+      data:
+        notification_icon: mdi:dog-service
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      title: Garderie
+      message: Il reste {{states("counter.nombre_de_seances_de_garderie_restantes")}}
+        séances de Garderie.
+      data:
+        notification_icon: mdi:dog-service
+  mode: single
+- id: '1728162349864'
+  alias: Détection Terrasse Damien
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_terrasse
+      notify_device: 12a79500c39768be13ccb4e257e431db
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg'
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+      final_update: true
+- id: '1728162383070'
+  alias: Détection Terrasse Charlotte
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_terrasse
+      notify_device: 6a59a64a9eea2ac236a4381a6e2e2a07
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg'
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+      final_update: true
+- id: '1728587295205'
+  alias: Mise en sécurité maison Détection Terrasse
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 3e7465ac932089e473a1d55da177268b
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: state
+    entity_id: group.nous
+    state: not_home
+  - condition: not
+    conditions:
+    - condition: zone
+      entity_id: person.damien
+      zone: zone.quartier
+  actions:
+  - if:
+    - condition: device
+      device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: is_unlocked
+    then:
+    - device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: lock
+  - device_id: a5a629732f99ebf9e5f8d06a1cb1bc29
+    domain: cover
+    entity_id: 421784976efc259b653746a5bad58391
+    type: close
+  - device_id: 79928112963fe7908518299b2770b25e
+    domain: cover
+    entity_id: 9df266d39fd1709041fca3a38787f8e1
+    type: close
+  - device_id: 598e3e196dcbc17a9e1529ee994fce96
+    domain: cover
+    entity_id: e73bf3f9ff4f89358561e08ad45dec91
+    type: close
+  - device_id: aec58c2882ca7d8965bef7223e6675fd
+    domain: cover
+    entity_id: fab149a7a9de2bb0a0e37b4b3c1faa09
+    type: close
+  - device_id: 0b539fa41409bb1c5c1c67558277aa0f
+    domain: cover
+    entity_id: 25e73f1a724596f3dcda530d909054ff
+    type: close
+  - device_id: 522ef4c1edfe1205227e3e40d8415cf1
+    domain: cover
+    entity_id: 5a3333361f2897efb043de2914d0bea8
+    type: close
+  - device_id: 3f0db5517c96affef4e0c3be9f059838
+    domain: cover
+    entity_id: ebb670607e8433bb2d151cc804c0c558
+    type: close
+  - device_id: 945135abcc5bda18833744bbf2ec28b0
+    domain: cover
+    entity_id: df88ec6f5d103a36baed795aa244adc2
+    type: close
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_volume_level
+      data:
+        media_stream: music_stream
+        command: 15
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_volume_level
+      data:
+        media_stream: notification_stream
+        command: 15
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_ringer_mode
+      data:
+        command: normal
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      message: Une intrusion a été detectée sur la terrasse !!!
+      title: URGENT Intrusion jardin
+      data:
+        notification_icon: mdi:alert
+        sticky: 'true'
+        persistent: true
+        color: red
+        clickAction: /app/ccab4aaf_frigate-proxy
+        ttl: 0
+        priority: high
+        channel: alarm_stream_max
+        importance: high
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 2
+      milliseconds: 0
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: TTS
+      data:
+        tts_text: Attention ! Intrusion détectée sur la terrasse !
+        channel: alarm_stream_max
+        ttl: 0
+        priority: high
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      message: Une intrusion a été detectée sur la terrasse !!!
+      title: URGENT Intrusion jardin
+      data:
+        notification_icon: mdi:alert
+        sticky: 'true'
+        color: red
+        clickAction: /app/ccab4aaf_frigate-proxy
+  - action: input_boolean.turn_on
+    metadata: {}
+    target:
+      entity_id: input_boolean.intrusion
+    data: {}
+  mode: single
+- id: '1731171382947'
+  alias: Détection Caméra Ouest Charlotte
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_ouest
+      notify_device: 6a59a64a9eea2ac236a4381a6e2e2a07
+      attachment: snapshot.jpg
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }}'
+- id: '1731171467668'
+  alias: Détection Caméra Ouest Damien
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_ouest
+      notify_device: 12a79500c39768be13ccb4e257e431db
+      attachment: snapshot.jpg
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+- id: '1731257375062'
+  alias: Désactivation Detection, Records Snap Manuelle
+  description: ''
+  triggers: []
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: e0f429a96537a133fad4283ca46062dd
+    domain: switch
+  - type: turn_off
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: 6c56ba365c4dfeb5708824633d3703dc
+    domain: switch
+  - type: turn_off
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 2f92848a19f1ea56c98360337ba8b9ed
+    domain: switch
+  - type: turn_off
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: ad46291776a65f501189444c1adba34c
+    domain: switch
+  - type: turn_off
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: 0937c870f503fb8e544fd74f1817be48
+    domain: switch
+  - type: turn_off
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: 08fc0203b1240983c399e5b756de2edc
+    domain: switch
+  - type: turn_off
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 62ef419e5eaab566336d574a1bd166e2
+    domain: switch
+    enabled: true
+  - type: turn_off
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: a0c2ef5f174dd96e082b3bdb8df81eca
+    domain: switch
+  - type: turn_off
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: 0059cc34ab2137ebead17668932a1d5a
+    domain: switch
+  - type: turn_off
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: 094a04602717a9b32748e39bb5a39b9b
+    domain: switch
+  - type: turn_off
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 3a03237edf138db48daa61f703dc209a
+    domain: switch
+  - type: turn_off
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: 9e88f186b66af4ad309fc36b2fb9be7c
+    domain: switch
+  - type: turn_off
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 2f92848a19f1ea56c98360337ba8b9ed
+    domain: switch
+  - type: turn_off
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: 7ae907405bbf975f83240d0c06ce076f
+    domain: switch
+  - type: turn_off
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: ecc52da085498952ddbdcb67b8bb8dff
+    domain: switch
+  - type: turn_off
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: 698208c2b87ef5de1feb1e181176bd22
+    domain: switch
+  - type: turn_off
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: 8f5afeef4ab97fa344dd119d12b93949
+    domain: switch
+  - type: turn_off
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: 3a89ad168cc2bed58e7ae900f7fb7e94
+    domain: switch
+  - type: turn_off
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: 50ef4da6199515c1a70f7b9548f77e06
+    domain: switch
+  - type: turn_off
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: c292cac396b955a90ab83fc9a0e5e5c9
+    domain: switch
+  - type: turn_off
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: fe2d216e6bc477cf64501c11545740f3
+    domain: switch
+  - type: turn_off
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: ee931765220b3ba1a67d6397cd3a312d
+    domain: switch
+  - type: turn_off
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: 87548355d90d7654eda822d6e7375ceb
+    domain: switch
+  - type: turn_off
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: 57c0f79e4b9cbd6bae91494d8f04d28a
+    domain: switch
+  - type: turn_off
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 9f14d5211f34fa4d8a28173f8635b843
+    domain: switch
+  - type: turn_off
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 26e16a8d473880cd18db9e7254a64b3f
+    domain: switch
+  - type: turn_off
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 800c79e0415eff4544c4956e4e33e001
+    domain: switch
+  - type: turn_off
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: b5f4275e071823097adab4a73e208087
+    domain: switch
+  - type: turn_off
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: 4624a8b44b394254cf34c97b4149a9d1
+    domain: switch
+  - type: turn_off
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: 2c93f602445af85c9a9ecdda3fbfc394
+    domain: switch
+  - type: turn_off
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: e7fbf04f94f0d1c2469967f482a8b581
+    domain: switch
+  - type: turn_off
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: 4425245df7a8a8edc69ae6b30f713704
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 878c98df1592bb64cab74a5c3a6c6197
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: a076671171cbd42515628bb195f821ec
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 7e0c0100636c9a0b92b2a98df2420208
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: b5a4fc759e14211a9a5c521a8f06d1bf
+    domain: switch
+  mode: single
+- id: '1733588794218'
+  alias: Mise en Sécurité Maison Détection Ouest
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: 3f2e97acab232547537ca9153dcb0f34
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: state
+    entity_id: group.nous
+    state: not_home
+  - condition: not
+    conditions:
+    - condition: zone
+      entity_id: person.damien
+      zone: zone.quartier
+  actions:
+  - if:
+    - condition: device
+      device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: is_unlocked
+    then:
+    - device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: lock
+  - device_id: a5a629732f99ebf9e5f8d06a1cb1bc29
+    domain: cover
+    entity_id: 421784976efc259b653746a5bad58391
+    type: close
+  - device_id: 79928112963fe7908518299b2770b25e
+    domain: cover
+    entity_id: 9df266d39fd1709041fca3a38787f8e1
+    type: close
+  - device_id: 598e3e196dcbc17a9e1529ee994fce96
+    domain: cover
+    entity_id: e73bf3f9ff4f89358561e08ad45dec91
+    type: close
+  - device_id: aec58c2882ca7d8965bef7223e6675fd
+    domain: cover
+    entity_id: fab149a7a9de2bb0a0e37b4b3c1faa09
+    type: close
+  - device_id: 0b539fa41409bb1c5c1c67558277aa0f
+    domain: cover
+    entity_id: 25e73f1a724596f3dcda530d909054ff
+    type: close
+  - device_id: 522ef4c1edfe1205227e3e40d8415cf1
+    domain: cover
+    entity_id: 5a3333361f2897efb043de2914d0bea8
+    type: close
+  - device_id: 3f0db5517c96affef4e0c3be9f059838
+    domain: cover
+    entity_id: ebb670607e8433bb2d151cc804c0c558
+    type: close
+  - device_id: 945135abcc5bda18833744bbf2ec28b0
+    domain: cover
+    entity_id: df88ec6f5d103a36baed795aa244adc2
+    type: close
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_volume_level
+      data:
+        media_stream: music_stream
+        command: 15
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_volume_level
+      data:
+        media_stream: notification_stream
+        command: 15
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_ringer_mode
+      data:
+        command: normal
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      message: Une intrusion a été detectée sur la caméra Ouest !!!
+      title: URGENT Intrusion jardin
+      data:
+        notification_icon: mdi:alert
+        sticky: 'true'
+        persistent: true
+        color: red
+        clickAction: /app/ccab4aaf_frigate-proxy
+        ttl: 0
+        priority: high
+        channel: alarm_stream_max
+        importance: high
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 2
+      milliseconds: 0
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: TTS
+      data:
+        tts_text: Attention ! Intrusion détectée sur la caméra Ouest !
+        channel: alarm_stream_max
+        ttl: 0
+        priority: high
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      message: Une intrusion a été detectée sur la caméra Ouest !!!
+      title: URGENT Intrusion jardin
+      data:
+        notification_icon: mdi:alert
+        sticky: 'true'
+        color: red
+        clickAction: /app/ccab4aaf_frigate-proxy
+  - action: input_boolean.turn_on
+    metadata: {}
+    target:
+      entity_id: input_boolean.intrusion
+    data: {}
+  mode: single
+- id: '1736610123388'
+  alias: Ouverture Garage Arrivée C4 Après Intermarché
+  description: ''
+  triggers:
+  - entity_id: person.damien
+    zone: zone.quartier
+    event: enter
+    trigger: zone
+    id: damie
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.porte_garage_garage_door_contact
+    state: 'off'
+  - condition: template
+    value_template: '{{ (as_timestamp(now()) - as_timestamp(states(''input_datetime.date_et_heure_sortie_intermarche'')))|int
+      < 7200 }}'
+  - condition: state
+    entity_id: binary_sensor.galaxys25_android_auto
+    state: 'on'
+  actions:
+  - type: turn_on
+    device_id: 9435c84d518b27aef2d31ceb799f48dd
+    entity_id: 14fb1d215a8d0c59d24b86751e89043f
+    domain: switch
+  mode: single
+- id: '1737058520836'
+  alias: Récupération Date et Heure Sortie Intermarché
+  description: ''
+  triggers:
+  - trigger: zone
+    entity_id: person.damien
+    zone: zone.intermarche
+    event: leave
+  actions:
+  - data:
+      timestamp: '{{ as_timestamp(now()) }}'
+    action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.date_et_heure_sortie_intermarche
+- id: '1737750865589'
+  alias: Allumer Lampe Entrée Cour
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: ab3e8476473d8393b32353f2dc820e04
+    entity_id: 523185bea9f163655c7bbbc9336ea731
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - type: turn_on
+    device_id: fda962f179815c37f94a07364f218ee4
+    entity_id: bfca43760cd45e33c96a8b1d396dfc9c
+    domain: light
+  - type: turn_on
+    device_id: b6c59ad6d03819c96374846ec5e7ee2f
+    entity_id: 07fe0f25e5dd7249961b1bb0b9984517
+    domain: light
+  mode: single
+- id: '1737750972804'
+  alias: Eteindre Lampe Entrée Cour
+  description: ''
+  triggers:
+  - type: not_occupied
+    device_id: ab3e8476473d8393b32353f2dc820e04
+    entity_id: 523185bea9f163655c7bbbc9336ea731
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - type: turn_off
+    device_id: fda962f179815c37f94a07364f218ee4
+    entity_id: bfca43760cd45e33c96a8b1d396dfc9c
+    domain: light
+  - type: turn_off
+    device_id: b6c59ad6d03819c96374846ec5e7ee2f
+    entity_id: 07fe0f25e5dd7249961b1bb0b9984517
+    domain: light
+  mode: single
+- id: '1738602383119'
+  alias: Notification prévisions météo du lendemain matin
+  description: ''
+  triggers:
+  - at: '19:00:00'
+    trigger: time
+  actions:
+  - target:
+      entity_id: weather.le_passage
+    data:
+      type: daily
+    response_variable: meteo_forecast
+    action: weather.get_forecasts
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      data:
+        notification_icon: mdi:weather-partly-snowy-rainy
+        clickAction: /dashboard-mobile/meteo
+      message: "{% if meteo_forecast %} {% set tomorrow = (now().date() + timedelta(days=1)).strftime('%Y-%m-%d')
+        %} {% for forecast in meteo_forecast['weather.le_passage']['forecast'] %}
+        {% set date_only = forecast['datetime'].split('T')[0] %} {% if date_only ==
+        tomorrow %} \U0001F324 **Prévision pour demain matin**\\n \U0001F321 Température
+        max : {{ forecast['temperature'] }}°C\\n ❄ Température min : {{ forecast['templow']
+        }}°C\\n ☁ Condition : {% if forecast['condition'] == 'sunny' %}Ensoleillé{%
+        elif forecast['condition'] == 'fog' %}Brouillard{% elif forecast['condition']
+        == 'partlycloudy' %}Partiellement nuageux{% elif forecast['condition'] ==
+        'cloudy' %}Nuageux{% elif forecast['condition'] == 'rainy' %}Pluvieux{% elif
+        forecast['condition'] == 'snowy' %}Neige{% else %}Non défini{% endif %} {%
+        if forecast['templow'] < 0 %}\\n \U0001F34B ATTENTION : Il y'a un risque de
+        gel, pensez à couvrir le citronnier ! {% endif %} {% break %} {% endif %}
+        {% endfor %} {% else %} ⚠ Aucune prévision disponible. {% endif %}\n"
+    enabled: true
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      data:
+        notification_icon: mdi:weather-partly-snowy-rainy
+        clickAction: /dashboard-mobile/meteo
+      message: "{% if meteo_forecast %} {% set tomorrow = (now().date() + timedelta(days=1)).strftime('%Y-%m-%d')
+        %} {% for forecast in meteo_forecast['weather.le_passage']['forecast'] %}
+        {% set date_only = forecast['datetime'].split('T')[0] %} {% if date_only ==
+        tomorrow %} \U0001F324 **Prévision pour demain matin**\\n \U0001F321 Température
+        max : {{ forecast['temperature'] }}°C\\n ❄ Température min : {{ forecast['templow']
+        }}°C\\n ☁ Condition : {% if forecast['condition'] == 'sunny' %}Ensoleillé{%
+        elif forecast['condition'] == 'fog' %}Brouillard{% elif forecast['condition']
+        == 'partlycloudy' %}Partiellement nuageux{% elif forecast['condition'] ==
+        'cloudy' %}Nuageux{% elif forecast['condition'] == 'rainy' %}Pluvieux{% elif
+        forecast['condition'] == 'snowy' %}Neige{% else %}Non défini{% endif %} {%
+        if forecast['templow'] < 0 %}\\n \U0001F34B ATTENTION : Il y'a un risque de
+        gel, pensez à couvrir le citronnier ! {% endif %} {% break %} {% endif %}
+        {% endfor %} {% else %} ⚠ Aucune prévision disponible. {% endif %}\n"
+    enabled: true
+  mode: single
+- id: '1739217946840'
+  alias: Ouverture Volet Matin
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.detecteur_presence_salon_occupancy
+    from: 'off'
+    to: 'on'
+  conditions:
+  - condition: time
+    after: 06:00:00
+    before: '10:00:00'
+  - condition: state
+    entity_id: cover.volets_piece_principale
+    state: closed
+    enabled: false
+  - condition: template
+    value_template: '{{ ( as_timestamp(now()) -
+
+
+      as_timestamp(state_attr("automation.ouverture_volet_matin",
+
+
+      "last_triggered")) |int(0) ) > 21600 }} '
+  actions:
+  - device_id: 522ef4c1edfe1205227e3e40d8415cf1
+    domain: cover
+    entity_id: 5a3333361f2897efb043de2914d0bea8
+    type: open
+  - device_id: aec58c2882ca7d8965bef7223e6675fd
+    domain: cover
+    entity_id: fab149a7a9de2bb0a0e37b4b3c1faa09
+    type: open
+  - device_id: 945135abcc5bda18833744bbf2ec28b0
+    domain: cover
+    entity_id: df88ec6f5d103a36baed795aa244adc2
+    type: open
+  - device_id: 3f0db5517c96affef4e0c3be9f059838
+    domain: cover
+    entity_id: ebb670607e8433bb2d151cc804c0c558
+    type: open
+  mode: single
+- id: '1744204825415'
+  alias: Notification Garage Ouvert Absents
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.nous
+    from: home
+    to: not_home
+  conditions:
+  - type: is_open
+    condition: device
+    device_id: 9435c84d518b27aef2d31ceb799f48dd
+    entity_id: 5a2c03189f0566d44596389f4e485857
+    domain: binary_sensor
+  actions:
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      data:
+        notification_icon: mdi:garage-open-variant
+        clickAction: /dashboard-mobile/portes
+      message: ATTENTION, la porte de garage est ouverte !
+      title: ⚠️Porte de garage ouverte
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      data:
+        notification_icon: mdi:garage-open-variant
+        clickAction: /dashboard-mobile/portes
+      message: ATTENTION, la porte de garage est ouverte !
+      title: ⚠️Porte de garage ouverte
+  mode: single
+- id: '1745153460943'
+  alias: Démarrage Pompe Piscine Assez Soleil
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.moyenne_production_solaire_cabanon_30min
+    above: 700
+  conditions:
+  - condition: state
+    entity_id: switch.pompe_piscine
+    state: 'off'
+  - condition: template
+    value_template: '{{ ( as_timestamp(now()) -
+
+
+      as_timestamp(state_attr("automation.demarrage_pompe_piscine_apres_midi_assez_de_soleil",
+
+
+      "last_triggered")) |int(0) ) > 2160 }}'
+  - condition: state
+    entity_id: binary_sensor.pac
+    state:
+    - 'off'
+  actions:
+  - type: turn_on
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: switch.pompe_piscine
+    domain: switch
+  mode: single
+- id: '1745936345187'
+  alias: Activer Recharge Tablette
+  description: ''
+  triggers:
+  - trigger: time
+    at: '18:00:00'
+  conditions:
+  - condition: state
+    entity_id: group.nous
+    state: home
+  actions:
+  - type: turn_on
+    device_id: d627e052a7ad08fc3623554ee32d2075
+    entity_id: 89008aea0b68403c511d0f73909d6538
+    domain: switch
+  mode: single
+- id: '1745938926202'
+  alias: Désactiver Recharge Tablette
+  description: ''
+  triggers:
+  - type: battery_level
+    device_id: 67ddffbacdf678bf2a05cc4348e7fdc4
+    entity_id: e4536392097e6380da8c0beca6d53cf7
+    domain: sensor
+    trigger: device
+    above: 95
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: d627e052a7ad08fc3623554ee32d2075
+    entity_id: 89008aea0b68403c511d0f73909d6538
+    domain: switch
+  mode: single
+- id: '1745939241864'
+  alias: Désactiver Recharge Tablette Absence
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.nous
+    from: home
+    to: not_home
+  conditions:
+  - condition: state
+    entity_id: switch.prise_tablette_salon
+    state: 'on'
+  actions:
+  - type: turn_off
+    device_id: d627e052a7ad08fc3623554ee32d2075
+    entity_id: 89008aea0b68403c511d0f73909d6538
+    domain: switch
+  mode: single
+- id: '1745939663776'
+  alias: Activer Recharge Tablette Si Besoin Batterie
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.nous
+    from: not_home
+    to: home
+  conditions:
+  - type: is_battery_level
+    condition: device
+    device_id: 67ddffbacdf678bf2a05cc4348e7fdc4
+    entity_id: e4536392097e6380da8c0beca6d53cf7
+    domain: sensor
+    below: 50
+  actions:
+  - type: turn_on
+    device_id: d627e052a7ad08fc3623554ee32d2075
+    entity_id: 89008aea0b68403c511d0f73909d6538
+    domain: switch
+  mode: single
+- id: '1746012970542'
+  alias: Redémarrage Routeur
+  description: ''
+  triggers:
+  - trigger: time
+    at: 03:45:00
+  conditions:
+  - condition: time
+    weekday:
+    - sun
+  actions:
+  - device_id: cde72a09b0150a312f18d968b5b19905
+    domain: button
+    entity_id: 7f43e6af495b70b4f61b5d44a450064a
+    type: press
+  mode: single
+- id: '1746648716684'
+  alias: Arrivée Charlotte
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.sm_g781b_wifi_connection
+    from: <not connected>
+    to: Charlotte&Damien
+  conditions: []
+  actions:
+  - action: device_tracker.see
+    metadata: {}
+    data:
+      dev_id: 6a59a64a9eea2ac236a4381a6e2e2a07
+      location_name: home
+  mode: single
+- id: '1746651743102'
+  alias: Départ Charlotte
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.sm_g781b_wifi_connection
+    to: <not connected>
+    from: Charlotte&Damien
+  conditions: []
+  actions:
+  - action: device_tracker.see
+    metadata: {}
+    data:
+      dev_id: 6a59a64a9eea2ac236a4381a6e2e2a07
+      location_name: not_home
+  mode: single
+- id: '1746884901247'
+  alias: Localisation Charlotte Redémarrage
+  description: ''
+  triggers:
+  - trigger: homeassistant
+    event: start
+  conditions: []
+  actions:
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 0
+      milliseconds: 0
+  - if:
+    - condition: or
+      conditions:
+      - condition: state
+        entity_id: sensor.sm_g781b_wifi_connection
+        state: Charlotte&Damien
+      - condition: state
+        entity_id: sensor.sm_g781b_wifi_connection
+        state:
+        - Charlotte&DamienExt2.4
+    then:
+    - action: device_tracker.see
+      metadata: {}
+      data:
+        dev_id: 6a59a64a9eea2ac236a4381a6e2e2a07
+        location_name: home
+    else:
+    - action: device_tracker.see
+      metadata: {}
+      data:
+        dev_id: 6a59a64a9eea2ac236a4381a6e2e2a07
+        location_name: not_home
+  mode: single
+- id: '1747823126437'
+  alias: Détection Cour Damien
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_cour
+      notify_device: 12a79500c39768be13ccb4e257e431db
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{review_id}}/review_preview.gif'
+      critical: 'true'
+      zones:
+      - entree_humains
+      - entree_animaux
+      zone_multi: false
+      zone_filter: true
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      presence_filter:
+      - ''
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Damien'' if sub_label == ''Damien'' else ''Une personne'' if
+        label == ''Person'' else ''Un chien'' if label==''Dog'' else ''Minouche''
+        if label==''Cat''}} {{''a été détectée'' if label==''Person'' else ''a été
+        détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name }}'
+      attachment_2: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/thumbnail.jpg'
+      final_update: true
+- id: '1748196125126'
+  alias: Détection Camera Garage Charlotte
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_garage
+      notify_device: 6a59a64a9eea2ac236a4381a6e2e2a07
+      attachment: snapshot.jpg
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+- id: '1748196188034'
+  alias: Détection Camera Garage Damien
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_garage
+      notify_device: 12a79500c39768be13ccb4e257e431db
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/thumbnail.jpg'
+      zones: []
+      zone_filter: false
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{description}}'
+      final_update: true
+      title: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+      final_delay: 15
+- id: '1748612293615'
+  alias: Arrêt Pompe quand Machine à Laver marche
+  description: ''
+  triggers:
+  - entity_id:
+    - binary_sensor.machine_a_laver
+    from: 'off'
+    to: 'on'
+    trigger: state
+  conditions:
+  - condition: device
+    type: is_on
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: bd80c77305de665184df92ae840238e8
+    domain: switch
+  actions:
+  - type: turn_off
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: bd80c77305de665184df92ae840238e8
+    domain: switch
+  - data:
+      entity_id: input_datetime.date_et_heure_derniere_filtration_piscine
+      timestamp: '{{ as_timestamp(now()) }}'
+    action: input_datetime.set_datetime
+  mode: single
+- id: '1748612349527'
+  alias: Démarrage Pompe quand Machine à Laver arrêt
+  description: ''
+  triggers:
+  - entity_id:
+    - binary_sensor.machine_a_laver
+    from: 'on'
+    to: 'off'
+    trigger: state
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.moyenne_production_solaire_cabanon_30min
+    above: 700
+  actions:
+  - type: turn_on
+    device_id: 95ad2e36919c21c8b6d0320dfe6a2aca
+    entity_id: bd80c77305de665184df92ae840238e8
+    domain: switch
+  mode: single
+- id: '1752309262621'
+  alias: Recharge Tablette Si Besoin Batterie Urgent
+  description: ''
+  triggers:
+  - type: battery_level
+    device_id: 67ddffbacdf678bf2a05cc4348e7fdc4
+    entity_id: e4536392097e6380da8c0beca6d53cf7
+    domain: sensor
+    trigger: device
+    below: 25
+  conditions:
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: person.charlotte2
+      state: home
+    - condition: state
+      entity_id: person.damien
+      state: home
+  actions:
+  - type: turn_on
+    device_id: d627e052a7ad08fc3623554ee32d2075
+    entity_id: 89008aea0b68403c511d0f73909d6538
+    domain: switch
+  mode: single
+- id: '1753012001294'
+  alias: Allumer TV et Ampli
+  description: ''
+  triggers:
+  - device_id: 9882b493a55a6786599c7e7288c187c4
+    domain: media_player
+    entity_id: 5bb3ae457936527883620c534557fd20
+    type: idle
+    trigger: device
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 47300227da123f33b5434c7d4b073599
+    entity_id: 81bad87428c7c7fc6482c16e72428d3d
+    domain: switch
+  mode: single
+- id: '1753012272418'
+  alias: Eteindre TV et Ampli
+  description: ''
+  triggers:
+  - device_id: 9882b493a55a6786599c7e7288c187c4
+    domain: media_player
+    entity_id: 5bb3ae457936527883620c534557fd20
+    type: turned_off
+    trigger: device
+  conditions: []
+  actions:
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 2
+      milliseconds: 0
+  - type: turn_off
+    device_id: 47300227da123f33b5434c7d4b073599
+    entity_id: 81bad87428c7c7fc6482c16e72428d3d
+    domain: switch
+  mode: single
+- id: '1754379187518'
+  alias: Eteindre Lampes Extérieurs Après Levé du Soleil
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunrise
+    offset: 00:01:00
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 8bd65c7d4c57f34d0a0a577aec1b8563
+    entity_id: baea000c4c8f6688637fd3dfdd0c9646
+    domain: light
+  - type: turn_off
+    device_id: fda962f179815c37f94a07364f218ee4
+    entity_id: bfca43760cd45e33c96a8b1d396dfc9c
+    domain: light
+  - type: turn_off
+    device_id: 5de006bafb90abb4fbc506b43ff52db6
+    entity_id: c24dca6793a549345c3eb1197a7eab99
+    domain: light
+  mode: single
+- id: '1754812659656'
+  alias: Désactivation Détection Records et Snap Dimanche 4h30
+  description: ''
+  triggers:
+  - trigger: time
+    at: 04:20:00
+  conditions:
+  - condition: time
+    weekday:
+    - sun
+  actions:
+  - type: turn_off
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: e0f429a96537a133fad4283ca46062dd
+    domain: switch
+  - type: turn_off
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: 6c56ba365c4dfeb5708824633d3703dc
+    domain: switch
+  - type: turn_off
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 2f92848a19f1ea56c98360337ba8b9ed
+    domain: switch
+  - type: turn_off
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: ad46291776a65f501189444c1adba34c
+    domain: switch
+  - type: turn_off
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: 0937c870f503fb8e544fd74f1817be48
+    domain: switch
+  - type: turn_off
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: 08fc0203b1240983c399e5b756de2edc
+    domain: switch
+  - type: turn_off
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 62ef419e5eaab566336d574a1bd166e2
+    domain: switch
+    enabled: true
+  - type: turn_off
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: a0c2ef5f174dd96e082b3bdb8df81eca
+    domain: switch
+  - type: turn_off
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: 0059cc34ab2137ebead17668932a1d5a
+    domain: switch
+  - type: turn_off
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: 094a04602717a9b32748e39bb5a39b9b
+    domain: switch
+  - type: turn_off
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 3a03237edf138db48daa61f703dc209a
+    domain: switch
+  - type: turn_off
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: 9e88f186b66af4ad309fc36b2fb9be7c
+    domain: switch
+  - type: turn_off
+    device_id: b12cfad63989c631f3dc1201d692b356
+    entity_id: 2f92848a19f1ea56c98360337ba8b9ed
+    domain: switch
+  - type: turn_off
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: 7ae907405bbf975f83240d0c06ce076f
+    domain: switch
+  - type: turn_off
+    device_id: 275b00b65835b37f55869fa2201d082e
+    entity_id: ecc52da085498952ddbdcb67b8bb8dff
+    domain: switch
+  - type: turn_off
+    device_id: 9b4dddbf8e15e477079853ac602eb378
+    entity_id: 698208c2b87ef5de1feb1e181176bd22
+    domain: switch
+  - type: turn_off
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: 8f5afeef4ab97fa344dd119d12b93949
+    domain: switch
+  - type: turn_off
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: 3a89ad168cc2bed58e7ae900f7fb7e94
+    domain: switch
+  - type: turn_off
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: 50ef4da6199515c1a70f7b9548f77e06
+    domain: switch
+  - type: turn_off
+    device_id: bafbf58d7747a31d638d46b584a6651d
+    entity_id: c292cac396b955a90ab83fc9a0e5e5c9
+    domain: switch
+  - type: turn_off
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: fe2d216e6bc477cf64501c11545740f3
+    domain: switch
+  - type: turn_off
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: ee931765220b3ba1a67d6397cd3a312d
+    domain: switch
+  - type: turn_off
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: 87548355d90d7654eda822d6e7375ceb
+    domain: switch
+  - type: turn_off
+    device_id: b9661f3679920b3a4a8d49ed9fd06798
+    entity_id: 57c0f79e4b9cbd6bae91494d8f04d28a
+    domain: switch
+  - type: turn_off
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 9f14d5211f34fa4d8a28173f8635b843
+    domain: switch
+  - type: turn_off
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 26e16a8d473880cd18db9e7254a64b3f
+    domain: switch
+  - type: turn_off
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 800c79e0415eff4544c4956e4e33e001
+    domain: switch
+  - type: turn_off
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: b5f4275e071823097adab4a73e208087
+    domain: switch
+  - type: turn_off
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: 4624a8b44b394254cf34c97b4149a9d1
+    domain: switch
+  - type: turn_off
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: 2c93f602445af85c9a9ecdda3fbfc394
+    domain: switch
+  - type: turn_off
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: e7fbf04f94f0d1c2469967f482a8b581
+    domain: switch
+  - type: turn_off
+    device_id: 7ae0871e41832c5c5232aa72a3acb4ed
+    entity_id: 4425245df7a8a8edc69ae6b30f713704
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 878c98df1592bb64cab74a5c3a6c6197
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: a076671171cbd42515628bb195f821ec
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: b5a4fc759e14211a9a5c521a8f06d1bf
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 7e0c0100636c9a0b92b2a98df2420208
+    domain: switch
+  mode: single
+- id: '1760612403746'
+  alias: Ouverture Portail Démarrage C4
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.galaxys25_android_auto
+    from: 'off'
+    to: 'on'
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.ouverture_portail_garage_door_contact
+    state: 'off'
+  - condition: state
+    entity_id: person.damien
+    state: home
+  actions:
+  - type: turn_on
+    device_id: d5a2d3856a6116af84533b36c78035d6
+    entity_id: 96225b318619dc5bb2070d5e33ff9133
+    domain: switch
+  mode: single
+- id: '1761597530206'
+  alias: Alerte Batterie Porte Entrée Faible
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.porte_entree_batterie
+    below: 15
+  conditions: []
+  actions:
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      message: Attention la batterie de la serrure de la porte d'entrée est à recharger.
+      title: Recharger Batterie Porte Entrée
+      data:
+        notification_icon: mdi:battery-alert-variant
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      message: Attention la batterie de la serrure de la porte d'entrée est à recharger.
+      title: Recharger Batterie Porte Entrée
+      data:
+        notification_icon: mdi:battery-alert-variant
+  mode: single
+- id: '1761601436166'
+  alias: Verrouillage Porte Entrée Lorsque Nous Absent
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.nous
+    from: home
+    to: not_home
+  conditions:
+  - condition: device
+    device_id: c9bfb683fd53e418050fe55a4aeaab42
+    domain: lock
+    entity_id: d85a4df6680399ab1591c75bca4f1a00
+    type: is_unlocked
+  - condition: not
+    conditions:
+    - condition: zone
+      entity_id: person.damien
+      zone: zone.quartier
+  actions:
+  - device_id: c9bfb683fd53e418050fe55a4aeaab42
+    domain: lock
+    entity_id: d85a4df6680399ab1591c75bca4f1a00
+    type: lock
+  mode: single
+- id: '1761774844453'
+  alias: Déverrouiller Porte Entrée Lorsque Damien Entre
+  description: ''
+  triggers:
+  - trigger: zone
+    entity_id: person.damien
+    zone: zone.home
+    event: enter
+  conditions:
+  - condition: device
+    device_id: c9bfb683fd53e418050fe55a4aeaab42
+    domain: lock
+    entity_id: d85a4df6680399ab1591c75bca4f1a00
+    type: is_locked
+  actions:
+  - device_id: c9bfb683fd53e418050fe55a4aeaab42
+    domain: lock
+    entity_id: d85a4df6680399ab1591c75bca4f1a00
+    type: unlock
+  mode: single
+- id: '1761846389467'
+  alias: Verrouillage Porte Entrée à 21h
+  description: ''
+  triggers:
+  - trigger: time
+    at: '21:00:00'
+  conditions:
+  - condition: device
+    device_id: c9bfb683fd53e418050fe55a4aeaab42
+    domain: lock
+    entity_id: d85a4df6680399ab1591c75bca4f1a00
+    type: is_unlocked
+  - type: is_not_open
+    condition: device
+    device_id: 1adf67a6d0c0a0f548349c7b5c5672e9
+    entity_id: 3fac59857f48413d73d93706ab834825
+    domain: binary_sensor
+  actions:
+  - device_id: c9bfb683fd53e418050fe55a4aeaab42
+    domain: lock
+    entity_id: d85a4df6680399ab1591c75bca4f1a00
+    type: lock
+  mode: single
+- id: '1762289807238'
+  alias: Verrouiller Serrure Porte Entrée Départ C4 Matin Charlotte Dort
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.galaxys25_android_auto
+    from: 'off'
+    to: 'on'
+  conditions:
+  - condition: numeric_state
+    entity_id: cover.volet_chambre
+    attribute: current_position
+    below: 50
+  - condition: time
+    before: '10:00:00'
+  actions:
+  - device_id: c9bfb683fd53e418050fe55a4aeaab42
+    domain: lock
+    entity_id: d85a4df6680399ab1591c75bca4f1a00
+    type: lock
+  mode: single
+- id: '1762366650491'
+  alias: Bascule Conso Elec Jour/Nuit
+  description: ''
+  triggers:
+  - trigger: time
+    at: 09:00:00
+    variables:
+      tariff: Jour
+  - trigger: time
+    at: '20:00:00'
+    variables:
+      tariff: Nuit
+  actions:
+  - action: select.select_option
+    target:
+      entity_id: select.conso_elec
+    data:
+      option: '{{ tariff }}'
+- id: '1762461689489'
+  alias: Bascule Consommation Electrique
+  description: ''
+  triggers:
+  - trigger: time
+    at: 09:00:00
+    variables:
+      tariff: Jour
+  - trigger: time
+    at: '20:00:00'
+    variables:
+      tariff: Nuit
+  conditions: []
+  actions:
+  - action: select.select_option
+    target:
+      entity_id: select.consommation_electrique
+    data:
+      option: '{{ tariff }}'
+  mode: single
+- id: '1763214474909'
+  alias: Détection Cabanon Damien
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_cabanon
+      notify_device: 12a79500c39768be13ccb4e257e431db
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg'
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+      final_update: true
+- id: '1763214506011'
+  alias: Détection Cabanon Charlotte
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_cabanon
+      notify_device: 6a59a64a9eea2ac236a4381a6e2e2a07
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg'
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+      final_update: true
+- id: '1763293793340'
+  alias: Mise en sécurité Maison Détection Cabanon
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: f2a311336c5a268d0d2001efb3b0e32b
+    entity_id: 7c53f7f12fd060fde63467d542f67e43
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: state
+    entity_id: group.nous
+    state: not_home
+  - condition: not
+    conditions:
+    - condition: zone
+      entity_id: person.damien
+      zone: zone.quartier
+  actions:
+  - if:
+    - condition: device
+      device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: is_unlocked
+    then:
+    - device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: lock
+  - device_id: a5a629732f99ebf9e5f8d06a1cb1bc29
+    domain: cover
+    entity_id: 421784976efc259b653746a5bad58391
+    type: close
+  - device_id: 79928112963fe7908518299b2770b25e
+    domain: cover
+    entity_id: 9df266d39fd1709041fca3a38787f8e1
+    type: close
+  - device_id: 598e3e196dcbc17a9e1529ee994fce96
+    domain: cover
+    entity_id: e73bf3f9ff4f89358561e08ad45dec91
+    type: close
+  - device_id: aec58c2882ca7d8965bef7223e6675fd
+    domain: cover
+    entity_id: fab149a7a9de2bb0a0e37b4b3c1faa09
+    type: close
+  - device_id: 0b539fa41409bb1c5c1c67558277aa0f
+    domain: cover
+    entity_id: 25e73f1a724596f3dcda530d909054ff
+    type: close
+  - device_id: 522ef4c1edfe1205227e3e40d8415cf1
+    domain: cover
+    entity_id: 5a3333361f2897efb043de2914d0bea8
+    type: close
+  - device_id: 3f0db5517c96affef4e0c3be9f059838
+    domain: cover
+    entity_id: ebb670607e8433bb2d151cc804c0c558
+    type: close
+  - device_id: 945135abcc5bda18833744bbf2ec28b0
+    domain: cover
+    entity_id: df88ec6f5d103a36baed795aa244adc2
+    type: close
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_volume_level
+      data:
+        media_stream: music_stream
+        command: 15
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_volume_level
+      data:
+        media_stream: notification_stream
+        command: 15
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_ringer_mode
+      data:
+        command: normal
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      message: Une intrusion a été detectée dans le jardin !!!
+      title: URGENT Intrusion jardin
+      data:
+        notification_icon: mdi:alert
+        sticky: 'true'
+        persistent: true
+        color: red
+        clickAction: /app/ccab4aaf_frigate-proxy
+        ttl: 0
+        priority: high
+        channel: alarm_stream_max
+        importance: high
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 2
+      milliseconds: 0
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: TTS
+      data:
+        tts_text: Attention ! Intrusion détectée dans le jardin !
+        channel: alarm_stream_max
+        ttl: 0
+        priority: high
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      message: Une intrusion a été detectée dans le jardin !!!
+      title: URGENT Intrusion jardin
+      data:
+        notification_icon: mdi:alert
+        sticky: 'true'
+        color: red
+        clickAction: /app/ccab4aaf_frigate-proxy
+  - action: input_boolean.turn_on
+    metadata: {}
+    target:
+      entity_id: input_boolean.intrusion
+    data: {}
+  mode: single
+- id: '1763305615859'
+  alias: Détection Cabanon Zoom Damien
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_cabanon_zoom
+      notify_device: 12a79500c39768be13ccb4e257e431db
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg'
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+      final_update: true
+- id: '1763310404970'
+  alias: Détection Cabanon Zoom Charlotte
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_cabanon_zoom
+      notify_device: 6a59a64a9eea2ac236a4381a6e2e2a07
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg'
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+      final_update: true
+- id: '1763321194596'
+  alias: Modifier Position Caméra Cabanon lorsque Ouest Detecte
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: 3f2e97acab232547537ca9153dcb0f34
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - device_id: 5b037f0a0bbf305609e47db9fbf4af2a
+    domain: select
+    entity_id: a130104acacee38dca8c808daabe2595
+    type: select_option
+    option: Position Terrasse
+  mode: single
+- id: '1763323516158'
+  alias: Activer Enregistrements Nuit
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunset
+    offset: 0
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 5b037f0a0bbf305609e47db9fbf4af2a
+    entity_id: f55396384cb4c8e7c783d07b66cda8d5
+    domain: switch
+  - type: turn_on
+    device_id: d29381d9029c2b0a912568bc329e1bf4
+    entity_id: b988982704bf59c29792e40be3553b49
+    domain: switch
+  - type: turn_on
+    device_id: 9b982669e333f0ba5b61ba12c768c1b0
+    entity_id: d7f4a41e938df3a23e2f97a8e594f07a
+    domain: switch
+  - type: turn_on
+    device_id: f92de21251f9e32f38554b2c8a057388
+    entity_id: 36318ae1a01d76cfd1ab00ed5ffff017
+    domain: switch
+  - action: counter.reset
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - counter.nombre_detections_animaux_nuit
+      - counter.nombre_detections_humains_nuit
+  - action: shell_command.purge_snapshots
+  mode: single
+- id: '1763324161954'
+  alias: Désactiver Enregistrements Nuit
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunrise
+    offset: 0
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 5b037f0a0bbf305609e47db9fbf4af2a
+    entity_id: f55396384cb4c8e7c783d07b66cda8d5
+    domain: switch
+  - type: turn_off
+    device_id: d29381d9029c2b0a912568bc329e1bf4
+    entity_id: b988982704bf59c29792e40be3553b49
+    domain: switch
+  - type: turn_off
+    device_id: 9b982669e333f0ba5b61ba12c768c1b0
+    entity_id: d7f4a41e938df3a23e2f97a8e594f07a
+    domain: switch
+  - type: turn_off
+    device_id: f92de21251f9e32f38554b2c8a057388
+    entity_id: 36318ae1a01d76cfd1ab00ed5ffff017
+    domain: switch
+  mode: single
+- id: '1763325435341'
+  alias: Enregistrer Détection Humains Cabanon Nuit
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.camera_cabanon_reolink_personne
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - action: input_datetime.set_datetime
+    data:
+      timestamp: '{{ now().timestamp() }}'
+    target:
+      entity_id: input_datetime.derniere_detection_humains
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.detection_humains_nuit
+  - action: counter.increment
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - counter.nombre_detections_humains_nuit
+  - action: camera.snapshot
+    metadata: {}
+    data:
+      filename: /config/www/snapshots/humain_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg
+    target:
+      entity_id: camera.camera_cabanon_reolink_fluide_lentille_0
+  mode: single
+- id: '1763325868670'
+  alias: Notification Détections Nuit
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunrise
+    offset: 00:01:00
+  conditions:
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: input_boolean.detection_humains_nuit
+      state:
+      - 'on'
+    - condition: state
+      entity_id: input_boolean.detection_animaux_nuit
+      state:
+      - 'on'
+  actions:
+  - action: input_boolean.turn_off
+    data: {}
+    target:
+      entity_id:
+      - input_boolean.detection_animaux_nuit
+      - input_boolean.detection_humains_nuit
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      title: "\U0001F4F7 Résumé des détections de la nuit"
+      message: "{%- if states('counter.nombre_detections_animaux_nuit') | default(0)
+        | int > 0 %}\n\U0001F43E {{\n  states('counter.nombre_detections_animaux_nuit')
+        | int\n  }} {%\n    if states('counter.nombre_detections_animaux_nuit') |
+        int == 1\n  %} animal{%\n    else\n  %} animaux{%\n  endif\n%}\n\n\U0001F550Dernière
+        détection d'animaux : {{ as_timestamp(states('input_datetime.derniere_detection_animaux'))
+        | timestamp_custom('%H:%M') }} \n{%- endif %}\n\n{%- if states('counter.nombre_detections_humains_nuit')
+        | default(0) | int > 0 %}\n\U0001F464 {{\n  states('counter.nombre_detections_humains_nuit')
+        | int\n  }}{%\n    if states('counter.nombre_detections_humains_nuit') | int
+        == 1\n  %} humain{%\n    else\n  %} humains{%\n  endif\n%}\n\n\n\U0001F550Dernière
+        détection d'humains : {{ as_timestamp(states('input_datetime.derniere_detection_humains'))
+        | timestamp_custom('%H:%M') }}\n{%- endif %}"
+      data:
+        notification_icon: mdi:motion-sensor
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      title: "\U0001F4F7 Résumé des détections de la nuit"
+      message: "action: notify.mobile_app_galaxys25\nmetadata: {}\ndata:\n  title:
+        \U0001F4F7 Résumé des détections de la nuit\n  message: >-\n    {%- if states('counter.nombre_detections_animaux_nuit')
+        | default(0) | int >\n    0 %}\n\n    \U0001F43E {{\n      states('counter.nombre_detections_animaux_nuit')
+        | int\n      }} {%\n        if states('counter.nombre_detections_animaux_nuit')
+        | int == 1\n      %} animal{%\n        else\n      %} animaux{%\n      endif\n
+        \   %}\n\n\n    \U0001F550Dernière détection d'animaux : {{\n    as_timestamp(states('input_datetime.derniere_detection_animaux'))
+        |\n    timestamp_custom('%H:%M') }} \n\n    {%- endif %}\n\n\n    {%- if states('counter.nombre_detections_humains_nuit')
+        | default(0) | int >\n    0 %}\n\n    \U0001F464 {{\n      states('counter.nombre_detections_humains_nuit')
+        | int\n      }}{%\n        if states('counter.nombre_detections_humains_nuit')
+        | int == 1\n      %} humain{%\n        else\n      %} humains{%\n      endif\n
+        \   %}\n\n\n\n    \U0001F550Dernière détection d'humains : {{\n    as_timestamp(states('input_datetime.derniere_detection_humains'))
+        |\n    timestamp_custom('%H:%M') }}\n\n    {%- endif %}\n  data:\n    notification_icon:
+        mdi:motion-sensor\n"
+      data:
+        notification_icon: mdi:motion-sensor
+  mode: single
+- id: '1763557605999'
+  alias: Enregistrer Détection Humains Ouest Nuit
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.camera_ouest_reolink_personne
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - action: input_datetime.set_datetime
+    data:
+      timestamp: '{{ now().timestamp() }}'
+    target:
+      entity_id: input_datetime.derniere_detection_humains
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.detection_humains_nuit
+  - action: counter.increment
+    metadata: {}
+    data: {}
+    target:
+      entity_id: counter.nombre_detections_humains_nuit
+  - action: camera.snapshot
+    metadata: {}
+    data:
+      filename: /config/www/snapshots/humain_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg
+    target:
+      entity_id: camera.camera_ouest_reolink_fluide
+  mode: single
+- id: '1763557749284'
+  alias: Enregistrer Détection Humains Terrasse
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.camera_terrasse_reolink_personne
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - action: input_datetime.set_datetime
+    data:
+      timestamp: '{{ now().timestamp() }}'
+    target:
+      entity_id: input_datetime.derniere_detection_humains
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.detection_humains_nuit
+  - action: counter.increment
+    metadata: {}
+    data: {}
+    target:
+      entity_id: counter.nombre_detections_humains_nuit
+  - action: camera.snapshot
+    metadata: {}
+    data:
+      filename: /config/www/snapshots/humain_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg
+    target:
+      entity_id: camera.camera_terrasse_reolink_fluide
+  mode: single
+- id: '1763557849201'
+  alias: Enregistrer Détection Animaux Cabanon Nuit
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.camera_cabanon_reolink_animal
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - action: input_datetime.set_datetime
+    data:
+      timestamp: '{{ now().timestamp() }}'
+    target:
+      entity_id:
+      - input_datetime.derniere_detection_animaux
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.detection_animaux_nuit
+  - action: counter.increment
+    metadata: {}
+    data: {}
+    target:
+      entity_id: counter.nombre_detections_animaux_nuit
+  mode: single
+- id: '1763557931539'
+  alias: Enregistrer Détection Animaux Ouest Nuit
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.camera_ouest_reolink_animal
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - action: input_datetime.set_datetime
+    data:
+      timestamp: '{{ now().timestamp() }}'
+    target:
+      entity_id:
+      - input_datetime.derniere_detection_animaux
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.detection_animaux_nuit
+  - action: counter.increment
+    metadata: {}
+    data: {}
+    target:
+      entity_id: counter.nombre_detections_animaux_nuit
+  mode: single
+- id: '1763557966990'
+  alias: Enregistrer Détection Animaux Terrasse Nuit
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.camera_terrasse_reolink_animal
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - action: input_datetime.set_datetime
+    data:
+      timestamp: '{{ now().timestamp() }}'
+    target:
+      entity_id:
+      - input_datetime.derniere_detection_animaux
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.detection_animaux_nuit
+  - action: counter.increment
+    metadata: {}
+    data: {}
+    target:
+      entity_id: counter.nombre_detections_animaux_nuit
+  mode: single
+- id: '1763586171822'
+  alias: Notification des snapshots de la nuit
+  triggers:
+  - event: sunrise
+    offset: 00:01:30
+    trigger: sun
+  actions:
+  - response_variable: snapshots_list
+    action: shell_command.list_snapshots
+  - if:
+    - condition: template
+      value_template: '{{ snapshots_list.stdout | trim != '''' }}'
+    then:
+    - repeat:
+        for_each: '{{ snapshots_list.stdout.split(''
+
+          '') }}'
+        sequence:
+        - data:
+            message: ''
+            data:
+              image: /local/snapshots/{{ repeat.item }}
+          action: notify.mobile_app_galaxys25
+    else:
+    - data:
+        message: Aucun snapshot trouvé.
+      action: notify.mobile_app_galaxys25
+    - data:
+        message: Aucun snapshot trouvé.
+      action: notify.mobile_app_sm_g781b
+- id: '1763753343874'
+  alias: Charlotte Jardin
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.sm_g781b_wifi_connection
+    to:
+    - Charlotte&DamienExt2.4
+  conditions: []
+  actions:
+  - action: device_tracker.see
+    metadata: {}
+    data:
+      dev_id: 6a59a64a9eea2ac236a4381a6e2e2a07
+      location_name: home
+  mode: single
+- id: '1763820314699'
+  alias: Allumer Lampe Garage
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.presence_garage
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: or
+    conditions:
+    - condition: sun
+      after: sunset
+    - type: is_not_open
+      condition: device
+      device_id: 9435c84d518b27aef2d31ceb799f48dd
+      entity_id: 5a2c03189f0566d44596389f4e485857
+      domain: binary_sensor
+  actions:
+  - type: turn_on
+    device_id: f470cbe387075cbc279237dff04b105b
+    entity_id: d20f5c65b3b0d85549d0ad99cf51c405
+    domain: switch
+  mode: single
+- id: '1763820381567'
+  alias: Eteindre Lampe Garage
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.presence_garage
+    from:
+    - 'on'
+    to:
+    - 'off'
+  conditions:
+  - condition: device
+    type: is_on
+    device_id: f470cbe387075cbc279237dff04b105b
+    entity_id: d20f5c65b3b0d85549d0ad99cf51c405
+    domain: switch
+  actions:
+  - type: turn_off
+    device_id: f470cbe387075cbc279237dff04b105b
+    entity_id: d20f5c65b3b0d85549d0ad99cf51c405
+    domain: switch
+  mode: single
+- id: '1764579202928'
+  alias: Allumer Guirlande Noël
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunset
+    offset: 0
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 9dc1a556cc5ee33c813326d111a63fd2
+    entity_id: fc586400e4666944cfdb5d4c389e9776
+    domain: switch
+  mode: single
+- id: '1764579243909'
+  alias: Eteindre Guirlande Noël
+  description: ''
+  triggers:
+  - trigger: time
+    at: '23:00:00'
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 9dc1a556cc5ee33c813326d111a63fd2
+    entity_id: fc586400e4666944cfdb5d4c389e9776
+    domain: switch
+  mode: single
+- id: '1765222919433'
+  alias: Allumer Lampe Entrée au Départ
+  description: ''
+  triggers:
+  - entity_id:
+    - group.nous
+    to: not_home
+    from: home
+    trigger: state
+  conditions:
+  - condition: state
+    entity_id: sun.sun
+    state:
+    - below_horizon
+  actions:
+  - type: turn_on
+    device_id: 892cf20476fa92fcec70fc07861bd107
+    entity_id: 91f8c90fe3a5e6a9ef24b822cb8220b9
+    domain: light
+  mode: single
+- id: '1766136902688'
+  alias: Frigate GenAI MAJ 1
+  description: Première MAJ de notif Frigate
+  triggers:
+  - topic: frigate/tracked_object_update
+    trigger: mqtt
+  conditions:
+  - condition: template
+    value_template: '{{ trigger.payload_json[''type''] == ''description'' }}'
+  actions:
+  - data:
+      message: 'Payload reçu : {{ trigger.payload_json }}'
+      level: info
+    action: system_log.write
+  - data:
+      title: Détection sur la {{ trigger.payload_json['camera'] | replace('_', ' ')
+        | title }}
+      message: '{{ trigger.payload_json[''description''] }}'
+      data:
+        tag: '{{ trigger.payload_json[''id''] }}'
+        group: '{{ trigger.payload_json[''camera''] }}-frigate-notification'
+        url: https:/homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+          trigger.payload_json['id'] }}/{{ trigger.payload_json['camera'] }}/clip.mp4
+        clickAction: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+          trigger.payload_json['id'] }}/{{ trigger.payload_json['camera'] }}/clip.mp4
+        image: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+          trigger.payload_json['id'] }}/event_preview.gif
+        attachment:
+          url: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+            trigger.payload_json['id'] }}/event_preview.gif
+          content-type: image/gif
+          hide-thumbnail: false
+        actions:
+        - action: URI
+          title: View Clip
+          uri: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+            trigger.payload_json['id'] }}/{{ trigger.payload_json['camera'] }}/clip.mp4
+        - action: URI
+          title: View Snapshot
+          uri: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+            trigger.payload_json['id'] }}/snapshot.jpg
+        - action: silence-{{ trigger.payload_json['camera'] }}
+          title: Silence 30m
+        notification_icon: mdi:motion-sensor
+    action: notify.mobile_app_galaxys25
+    enabled: true
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      data:
+        notification_icon: mdi:motion-sensor
+        message: '{{ trigger.payload_json[''description''] }}'
+        data:
+          tag: '{{ trigger.payload_json[''id''] }}'
+          group: '{{ trigger.payload_json[''camera''] }}-frigate-notification'
+          url: https:/homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+            trigger.payload_json['id'] }}/{{ trigger.payload_json['camera'] }}/clip.mp4
+          clickAction: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+            trigger.payload_json['id'] }}/{{ trigger.payload_json['camera'] }}/clip.mp4
+          image: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+            trigger.payload_json['id'] }}/event_preview.gif
+          attachment:
+            url: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+              trigger.payload_json['id'] }}/event_preview.gif
+            content-type: image/gif
+            hide-thumbnail: false
+          actions:
+          - action: URI
+            title: View Clip
+            uri: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+              trigger.payload_json['id'] }}/{{ trigger.payload_json['camera'] }}/clip.mp4
+          - action: URI
+            title: View Snapshot
+            uri: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+              trigger.payload_json['id'] }}/snapshot.jpg
+          - action: silence-{{ trigger.payload_json['camera'] }}
+            title: Silence 30m
+      title: Détection sur la {{ trigger.payload_json['camera'] | replace('_', ' ')
+        | title   }}
+      message: '{{ trigger.payload_json[''description''] }}'
+    enabled: false
+- id: '1766136994322'
+  alias: Frigate GenAI MAJ 2
+  description: Deuxième MAJ de notification Frigate
+  triggers:
+  - trigger: mqtt
+    options:
+      topic: frigate/reviews
+  conditions:
+  - condition: template
+    value_template: '{{ trigger.payload_json[''type''] == ''genai'' }}'
+  actions:
+  - data:
+      title: "{% set base_title = trigger.payload_json['after']['data']['metadata']['title']
+        %} {% set threat = trigger.payload_json['after']['data']['metadata'].get('potential_threat_level',
+        0) %}\n{% if threat == 1 %}\n  Needs Review: {{ base_title }}\n{% elif threat
+        == 2 %}\n  Security Concern: {{ base_title }}\n{% else %}\n  {{ base_title
+        }}\n{% endif %}\n"
+      message: '{{ trigger.payload_json[''after''][''data''][''metadata''][''scene'']
+        }}'
+      data:
+        tag: '{{ trigger.payload_json[''after''][''data''][''detections''][0] }}'
+        group: '{{ trigger.payload_json[''camera''] }}-frigate-notification'
+        image: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+          trigger.payload_json['after']['data']['detections'][0] }}/event_preview.gif
+        attachment:
+          url: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+            trigger.payload_json['after']['data']['detections'][0] }}/event_preview.gif
+          content-type: image/gif
+          hide-thumbnail: false
+        url: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+          trigger.payload_json['after']['data']['detections'][0] }}/{{ trigger.payload_json['after']['camera']
+          }}/clip.mp4
+        clickAction: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+          trigger.payload_json['after']['data']['detections'][0] }}/{{ trigger.payload_json['after']['camera']
+          }}/clip.mp4
+        actions:
+        - action: URI
+          title: View Clip
+          uri: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+            trigger.payload_json['after']['data']['detections'][0] }}/{{ trigger.payload_json['after']['camera']
+            }}/clip.mp4
+        - action: URI
+          title: View Snapshot
+          uri: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+            trigger.payload_json['after']['data']['detections'][0] }}/snapshot.jpg
+        - action: silence-{{ trigger.payload_json['after']['camera'] }}
+          title: Silence 30m
+        notification_icon: mdi:motion-sensor
+    action: notify.mobile_app_galaxys25
+    enabled: true
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      title: '{% set base_title = trigger.payload_json[''after''][''data''][''metadata''][''title'']   %}
+        {% set threat =   trigger.payload_json[''after''][''data''][''metadata''].get(''potential_threat_level'',   0)
+        %}    {% if threat == 1 %}     Needs Review: {{ base_title }}   {% elif threat
+        == 2 %}     Security Concern: {{ base_title }}   {% else %}     {{ base_title
+        }}   {% endif %}'
+      message: '"{{ trigger.payload_json[''after''][''data''][''metadata''][''scene'']
+        }}"'
+      data:
+        notification_icon: mdi:motion-sensor
+        data:
+          tag: '{{ trigger.payload_json[''after''][''data''][''detections''][0] }}'
+          group: '{{ trigger.payload_json[''camera''] }}-frigate-notification'
+          image: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+            trigger.payload_json['after']['data']['detections'][0] }}/event_preview.gif
+          attachment:
+            url: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+              trigger.payload_json['after']['data']['detections'][0] }}/event_preview.gif
+            content-type: image/gif
+            hide-thumbnail: false
+          url: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+            trigger.payload_json['after']['data']['detections'][0] }}/{{ trigger.payload_json['after']['camera']
+            }}/clip.mp4
+          clickAction: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+            trigger.payload_json['after']['data']['detections'][0] }}/{{ trigger.payload_json['after']['camera']
+            }}/clip.mp4
+          actions:
+          - action: URI
+            title: View Clip
+            uri: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+              trigger.payload_json['after']['data']['detections'][0] }}/{{ trigger.payload_json['after']['camera']
+              }}/clip.mp4
+          - action: URI
+            title: View Snapshot
+            uri: https://homeassistant.emmanuelli-billard.fr/api/frigate/notifications/{{
+              trigger.payload_json['after']['data']['detections'][0] }}/snapshot.jpg
+          - action: silence-{{ trigger.payload_json['after']['camera'] }}
+            title: Silence 30m
+    enabled: false
+- id: '1766246186264'
+  alias: Allumer Sapin
+  description: ''
+  triggers:
+  - trigger: time
+    at: '15:00:00'
+  conditions: []
+  actions:
+  - action: switch.turn_on
+    metadata: {}
+    target:
+      entity_id: switch.pompe_piscine
+    data: {}
+  mode: single
+- id: '1766246225656'
+  alias: Eteindre Sapin
+  description: ''
+  triggers:
+  - trigger: time
+    at: '23:00:00'
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    target:
+      entity_id: switch.pompe_piscine
+    data: {}
+  mode: single
+- id: '1766778174499'
+  alias: Départ Charlotte 2
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.sm_g781b_wifi_connection
+    to:
+    - <not connected>
+    from:
+    - Charlotte&DamienExt2.4
+  conditions: []
+  actions:
+  - action: device_tracker.see
+    metadata: {}
+    data:
+      dev_id: 6a59a64a9eea2ac236a4381a6e2e2a07
+      location_name: not_home
+  mode: single
+- id: '1767373171494'
+  alias: Forcer Actualisation WIFI Charlotte
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - person.damien
+    from:
+    - home
+    - Quartier
+  conditions: []
+  actions:
+  - repeat:
+      count: 2
+      sequence:
+      - data:
+          message: update
+          data:
+            request_location_update: true
+            channel: localisation_charlotte
+            importance: low
+            priority: low
+            ttl: 0
+        action: notify.mobile_app_sm_g781b
+      - delay: 00:00:20
+  mode: single
+- id: '1767451481342'
+  alias: Forcer Actualisation WIFI Charlotte 2
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.ouverture_portail_garage_door_contact
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: state
+    entity_id: person.damien
+    state:
+    - not_home
+  actions:
+  - repeat:
+      count: 5
+      sequence:
+      - data:
+          message: update
+          data:
+            request_location_update: true
+            channel: localisation_charlotte
+            importance: low
+            priority: low
+            ttl: 0
+        action: notify.mobile_app_sm_g781b
+      - delay: 00:00:20
+  mode: single
+- id: '1771165749422'
+  alias: Basculer Tableau de Bord sur Home
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.tablette_screen
+    from:
+    - 'on'
+    to:
+    - 'off'
+  conditions: []
+  actions:
+  - action: notify.mobile_app_tablette_salon
+    data:
+      message: command_webview
+      data:
+        command: /dashboard-mobile/home
+  mode: single
+- id: '1773001951131'
+  alias: Coupure Electricité Cabanon
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - update.lampe_cabanon
+    to:
+    - unavailable
+  conditions: []
+  actions:
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      title: ⚠️⚡Coupure Courant Cabanon
+      message: ⚠️ Le cabanon n'est plus alimenté en électricité
+      data:
+        notification_icon: mdi:flash-alert
+  mode: single
+- id: '1773912489200'
+  alias: Réception Lettre
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.bal_fenetre_contact
+    to:
+    - 'on'
+    from:
+    - 'off'
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.ouverture_portail_garage_door_contact
+    state: 'off'
+    for:
+      minutes: 1
+    enabled: true
+  actions:
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.courrier_present
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      title: "\U0001F4E6Lettre déposée"
+      message: Le facteur ou le livreur est passé !!!
+      data:
+        notification_icon: mdi:package-variant-closed-check
+        tag: courrier_bal
+        actions:
+        - action: COURRIER_RELEVE
+          title: "\U0001F4EC Courrier relevé"
+        - action: RAPPEL_18H
+          title: ⏰ Rappel 18h
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      title: "\U0001F4E6Lettre déposée"
+      message: Le facteur ou le livreur est passé !!!
+      data:
+        notification_icon: mdi:package-variant-closed-check
+        tag: courrier_bal
+        actions:
+        - action: COURRIER_RELEVE
+          title: "\U0001F4EC Courrier relevé"
+        - action: RAPPEL_18H
+          title: ⏰ Rappel 18h
+  mode: single
+- id: '1774728806558'
+  alias: Allumer Lampes Cour Lorsque Portail s'ouvre
+  description: ''
+  triggers:
+  - type: opened
+    device_id: d5a2d3856a6116af84533b36c78035d6
+    entity_id: 9bc13aa56abe02fd017cedd5709060eb
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: and
+    conditions:
+    - condition: sun
+      after: sunset
+      before: sunrise
+    - type: is_not_occupied
+      condition: device
+      device_id: ab3e8476473d8393b32353f2dc820e04
+      entity_id: 523185bea9f163655c7bbbc9336ea731
+      domain: binary_sensor
+      for:
+        hours: 0
+        minutes: 1
+        seconds: 0
+  actions:
+  - type: turn_on
+    device_id: b6c59ad6d03819c96374846ec5e7ee2f
+    entity_id: 07fe0f25e5dd7249961b1bb0b9984517
+    domain: light
+  - type: turn_on
+    device_id: fda962f179815c37f94a07364f218ee4
+    entity_id: bfca43760cd45e33c96a8b1d396dfc9c
+    domain: light
+  mode: single
+- id: '1774729122811'
+  alias: Allumer Lampes Cour Après Détection
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: 4bad99eb2f0634f72d422de0e4a77cfb
+    entity_id: f76364131fe8f883a434a5acc6433885
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: and
+    conditions:
+    - condition: sun
+      after: sunset
+      before: sunrise
+    - type: is_not_occupied
+      condition: device
+      device_id: ab3e8476473d8393b32353f2dc820e04
+      entity_id: 523185bea9f163655c7bbbc9336ea731
+      domain: binary_sensor
+      for:
+        hours: 0
+        minutes: 1
+        seconds: 0
+  actions:
+  - type: turn_on
+    device_id: b6c59ad6d03819c96374846ec5e7ee2f
+    entity_id: 07fe0f25e5dd7249961b1bb0b9984517
+    domain: light
+  - type: turn_off
+    device_id: 5de006bafb90abb4fbc506b43ff52db6
+    entity_id: c24dca6793a549345c3eb1197a7eab99
+    domain: light
+  mode: single
+- id: '1774729727913'
+  alias: Eteindre Lampes Cours après Fermeture Portail
+  description: ''
+  triggers:
+  - type: not_opened
+    device_id: d5a2d3856a6116af84533b36c78035d6
+    entity_id: 9bc13aa56abe02fd017cedd5709060eb
+    domain: binary_sensor
+    trigger: device
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - type: turn_off
+    device_id: fda962f179815c37f94a07364f218ee4
+    entity_id: bfca43760cd45e33c96a8b1d396dfc9c
+    domain: light
+  - type: turn_off
+    device_id: b6c59ad6d03819c96374846ec5e7ee2f
+    entity_id: 07fe0f25e5dd7249961b1bb0b9984517
+    domain: light
+  mode: single
+- id: '1774730020156'
+  alias: Eteindre Lampes Cour après Détection
+  description: ''
+  triggers:
+  - type: not_occupied
+    device_id: 4bad99eb2f0634f72d422de0e4a77cfb
+    entity_id: 289d100c6102eda648b362763fc7665d
+    domain: binary_sensor
+    trigger: device
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - type: turn_off
+    device_id: fda962f179815c37f94a07364f218ee4
+    entity_id: bfca43760cd45e33c96a8b1d396dfc9c
+    domain: light
+  - type: turn_off
+    device_id: b6c59ad6d03819c96374846ec5e7ee2f
+    entity_id: 07fe0f25e5dd7249961b1bb0b9984517
+    domain: light
+  mode: single
+- id: '1774865454997'
+  alias: Gestion boutons notification BAL
+  description: ''
+  triggers:
+  - trigger: event
+    event_type: mobile_app_notification_action
+  actions:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.event.data.action == ''COURRIER_RELEVE'' }}'
+      sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.courrier_present
+      - action: notify.mobile_app_galaxys25
+        data:
+          message: clear_notification
+          data:
+            tag: courrier_bal
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.event.data.action == ''RAPPEL_18H'' }}'
+      sequence:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.rappel_courrier
+  mode: parallel
+- id: '1774865512793'
+  alias: Rappel courrier 18h
+  description: ''
+  triggers:
+  - trigger: time
+    at: '18:00:00'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.rappel_courrier
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.courrier_present
+    state: 'on'
+  actions:
+  - action: notify.mobile_app_galaxys25
+    data:
+      title: "\U0001F4EC Pense à relever le courrier"
+      message: Le courrier est toujours dans la boîte aux lettres.
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.rappel_courrier
+  mode: single
+- id: '1775564555577'
+  alias: Eteindre Lampe Bureau Damien
+  description: ''
+  triggers:
+  - device_id: 79928112963fe7908518299b2770b25e
+    domain: cover
+    entity_id: 9df266d39fd1709041fca3a38787f8e1
+    type: opened
+    trigger: device
+  conditions:
+  - condition: device
+    type: is_on
+    device_id: fb34654dba77c12700cee9e754fd342d
+    entity_id: deff03d17396d922d66b73ecdbbc5a15
+    domain: light
+  actions:
+  - type: turn_off
+    device_id: fb34654dba77c12700cee9e754fd342d
+    entity_id: deff03d17396d922d66b73ecdbbc5a15
+    domain: light
+  mode: single
+- id: '1775738306753'
+  alias: Détection Dalle Parking Damien
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_dalle_parking
+      notify_device: 12a79500c39768be13ccb4e257e431db
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg'
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+      final_update: true
+- id: '1775738376659'
+  alias: Détection Dalle Parking Charlotte
+  description: ''
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_dalle_parking
+      notify_device: 6a59a64a9eea2ac236a4381a6e2e2a07
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg'
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+      final_update: true
+- id: '1775738772047'
+  alias: Modifier Position Caméra Dalle Parking lorsque Caméra Cour Détecte
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: 4bad99eb2f0634f72d422de0e4a77cfb
+    entity_id: f76364131fe8f883a434a5acc6433885
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - device_id: f92de21251f9e32f38554b2c8a057388
+    domain: select
+    entity_id: 35720e646eaf16ac52abe2cca75cb744
+    type: select_option
+    option: Local Poubelle
+  mode: single
+- id: '1775739423013'
+  alias: Modifier Position Caméra Dalle Parking lorsque Caméra Ouest Détecte
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: 3f2e97acab232547537ca9153dcb0f34
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - device_id: f92de21251f9e32f38554b2c8a057388
+    domain: select
+    entity_id: 35720e646eaf16ac52abe2cca75cb744
+    type: select_option
+    option: Terrasse Cailloux
+  mode: single
+- id: '1775809076862'
+  alias: Enregistrer Détection Animaux Dalle Parking Nuit
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.camera_dalle_parking_animal
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - action: input_datetime.set_datetime
+    data:
+      timestamp: '{{ now().timestamp() }}'
+    target:
+      entity_id:
+      - input_datetime.derniere_detection_animaux
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.detection_animaux_nuit
+  - action: counter.increment
+    metadata: {}
+    data: {}
+    target:
+      entity_id: counter.nombre_detections_animaux_nuit
+  mode: single
+- id: '1775809268935'
+  alias: Enregistrer Détection Humains Dalle Parking Nuit
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.camera_dalle_parking_personne
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  actions:
+  - action: input_datetime.set_datetime
+    data:
+      timestamp: '{{ now().timestamp() }}'
+    target:
+      entity_id: input_datetime.derniere_detection_humains
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.detection_humains_nuit
+  - action: counter.increment
+    metadata: {}
+    data: {}
+    target:
+      entity_id: counter.nombre_detections_humains_nuit
+  - action: camera.snapshot
+    metadata: {}
+    data:
+      filename: /config/www/snapshots/humain_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg
+    target:
+      entity_id: camera.camera_terrasse_reolink_fluide
+  mode: single
+- id: '1775809551384'
+  alias: Activer Enregistrement Dalle Parking lorsque Caméra Cour Détecte
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: 4bad99eb2f0634f72d422de0e4a77cfb
+    entity_id: f76364131fe8f883a434a5acc6433885
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 7e0c0100636c9a0b92b2a98df2420208
+    domain: switch
+  mode: single
+- id: '1775809754389'
+  alias: Activer Enregistrement Dalle Parking lorsque Caméra Ouest Détecte
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: e72107c1574ad27d244312047576da91
+    entity_id: 3f2e97acab232547537ca9153dcb0f34
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 7e0c0100636c9a0b92b2a98df2420208
+    domain: switch
+  mode: single
+- id: '1775810726691'
+  alias: Détection Dalle Parking Nuit Damien
+  description: ''
+  conditions:
+  - condition: sun
+    before: sunrise
+    after: sunset
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_dalle_parking
+      notify_device: 12a79500c39768be13ccb4e257e431db
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg'
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+      final_update: true
+- id: '1775810861796'
+  alias: Détection Dalle Parking Nuit Charlotte
+  description: ''
+  conditions:
+  - condition: sun
+    before: sunrise
+    after: sunset
+  use_blueprint:
+    path: SgtBatten/Stable.yaml
+    input:
+      camera:
+      - camera.camera_dalle_parking
+      notify_device: 6a59a64a9eea2ac236a4381a6e2e2a07
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg'
+      presence_filter:
+      - group.nous
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4'
+      message: '{{ ''Une personne'' if label == ''Person'' else ''Un chien'' if label==''Dog''
+        else ''Minouche'' if label==''Cat''}} {{''a été détectée'' if label==''Person''
+        else ''a été détecté'' if label==''Dog'' or ''Cat'' }} sur la {{ camera_name
+        }} '
+      final_update: true
+- id: '1775811067602'
+  alias: Activer Détections Dalle Parking Nuit
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunset
+    offset: 0
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 878c98df1592bb64cab74a5c3a6c6197
+    domain: switch
+  - type: turn_on
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: a076671171cbd42515628bb195f821ec
+    domain: switch
+  - type: turn_on
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 7e0c0100636c9a0b92b2a98df2420208
+    domain: switch
+  - type: turn_on
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: b5a4fc759e14211a9a5c521a8f06d1bf
+    domain: switch
+  mode: single
+- id: '1775811219776'
+  alias: Désactiver Détections Dalle Parking Nuit
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunrise
+    offset: 0
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 878c98df1592bb64cab74a5c3a6c6197
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: a076671171cbd42515628bb195f821ec
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 7e0c0100636c9a0b92b2a98df2420208
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: b5a4fc759e14211a9a5c521a8f06d1bf
+    domain: switch
+  mode: single
+- id: '1775815703690'
+  alias: Désactiver Enregistrement Dalle Parking Après Détection Cour et Ouest
+  description: ''
+  triggers:
+  - type: turned_on
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 7e0c0100636c9a0b92b2a98df2420208
+    domain: switch
+    trigger: device
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  conditions:
+  - condition: sun
+    before: sunset
+  actions:
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 7e0c0100636c9a0b92b2a98df2420208
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: 878c98df1592bb64cab74a5c3a6c6197
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: a076671171cbd42515628bb195f821ec
+    domain: switch
+  - type: turn_off
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: b5a4fc759e14211a9a5c521a8f06d1bf
+    domain: switch
+  mode: single
+- id: '1777380367053'
+  alias: Mise en Sécurité Maison Détection Dalle Parking
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: e0187a3471fde6ab5043568b2c4f120e
+    entity_id: b19fb4f9d699b1b79b444fece0db613d
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: state
+    entity_id: group.nous
+    state: not_home
+  - condition: not
+    conditions:
+    - condition: zone
+      entity_id: person.damien
+      zone: zone.quartier
+  actions:
+  - if:
+    - condition: device
+      device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: is_unlocked
+    then:
+    - device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: lock
+  - device_id: a5a629732f99ebf9e5f8d06a1cb1bc29
+    domain: cover
+    entity_id: 421784976efc259b653746a5bad58391
+    type: close
+  - device_id: 79928112963fe7908518299b2770b25e
+    domain: cover
+    entity_id: 9df266d39fd1709041fca3a38787f8e1
+    type: close
+  - device_id: 598e3e196dcbc17a9e1529ee994fce96
+    domain: cover
+    entity_id: e73bf3f9ff4f89358561e08ad45dec91
+    type: close
+  - device_id: aec58c2882ca7d8965bef7223e6675fd
+    domain: cover
+    entity_id: fab149a7a9de2bb0a0e37b4b3c1faa09
+    type: close
+  - device_id: 0b539fa41409bb1c5c1c67558277aa0f
+    domain: cover
+    entity_id: 25e73f1a724596f3dcda530d909054ff
+    type: close
+  - device_id: 522ef4c1edfe1205227e3e40d8415cf1
+    domain: cover
+    entity_id: 5a3333361f2897efb043de2914d0bea8
+    type: close
+  - device_id: 3f0db5517c96affef4e0c3be9f059838
+    domain: cover
+    entity_id: ebb670607e8433bb2d151cc804c0c558
+    type: close
+  - device_id: 945135abcc5bda18833744bbf2ec28b0
+    domain: cover
+    entity_id: df88ec6f5d103a36baed795aa244adc2
+    type: close
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_volume_level
+      data:
+        media_stream: music_stream
+        command: 15
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_volume_level
+      data:
+        media_stream: notification_stream
+        command: 15
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_ringer_mode
+      data:
+        command: normal
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      message: Une intrusion a été detectée sur la dalle parking !!!
+      title: URGENT Intrusion jardin
+      data:
+        notification_icon: mdi:alert
+        sticky: 'true'
+        persistent: true
+        color: red
+        clickAction: /app/ccab4aaf_frigate-proxy
+        ttl: 0
+        priority: high
+        channel: alarm_stream_max
+        importance: high
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 2
+      milliseconds: 0
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: TTS
+      data:
+        tts_text: Attention ! Intrusion détectée sur la dalle parking !
+        channel: alarm_stream_max
+        ttl: 0
+        priority: high
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      message: Une intrusion a été detectée sur la dalle parking !!!
+      title: URGENT Intrusion jardin
+      data:
+        notification_icon: mdi:alert
+        sticky: 'true'
+        color: red
+        clickAction: /app/ccab4aaf_frigate-proxy
+  - action: input_boolean.turn_on
+    metadata: {}
+    target:
+      entity_id: input_boolean.intrusion
+    data: {}
+  mode: single
+- id: '1777382256550'
+  alias: Activer les sirènes
+  description: ''
+  triggers: []
+  conditions: []
+  actions:
+  - action: siren.turn_on
+    metadata: {}
+    target:
+      entity_id:
+      - siren.camera_cour_reolink_sirene
+      - siren.camera_cabanon_reolink_sirene
+      - siren.camera_terrasse_reolink_sirene
+      - siren.camera_ouest_reolink_sirene
+      - siren.camera_dalle_parking_sirene
+    data: {}
+  mode: single
+- id: '1777382419998'
+  alias: Eteindre les sirènes
+  description: ''
+  triggers: []
+  conditions: []
+  actions:
+  - action: siren.turn_off
+    metadata: {}
+    target:
+      entity_id:
+      - siren.camera_cour_reolink_sirene
+      - siren.camera_cabanon_reolink_sirene
+      - siren.camera_terrasse_reolink_sirene
+      - siren.camera_ouest_reolink_sirene
+      - siren.camera_dalle_parking_sirene
+    data: {}
+  - action: input_boolean.turn_off
+    metadata: {}
+    target:
+      entity_id: input_boolean.intrusion
+    data: {}
+  mode: single
+- id: '1777390910171'
+  alias: test
+  description: ''
+  triggers: []
+  conditions: []
+  actions:
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_volume_level
+      data:
+        media_stream: music_stream
+        command: 15
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_volume_level
+      data:
+        media_stream: notification_stream
+        command: 15
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: command_ringer_mode
+      data:
+        command: normal
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      message: Une intrusion a été detectée dans le jardin !!!
+      title: URGENT Intrusion jardin
+      data:
+        notification_icon: mdi:alert
+        sticky: 'true'
+        persistent: true
+        color: red
+        clickAction: /dashboard-mobile/cameras
+        ttl: 0
+        priority: high
+        channel: alarm_stream_max
+        importance: high
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 2
+      milliseconds: 0
+  - action: notify.mobile_app_galaxys25
+    data:
+      message: TTS
+      data:
+        tts_text: Attention ! Intrusion détectée dans le jardin !
+        channel: alarm_stream_max
+        ttl: 0
+        priority: high
+  mode: single
+- id: '1777819137071'
+  alias: Réinitialiser le compte de pluie à minuit
+  description: ''
+  triggers:
+  - at: 00:00:00
+    trigger: time
+  actions:
+  - target:
+      entity_id: input_number.compteur_pluie_on
+    data:
+      value: 0
+    action: input_number.set_value
+  - target:
+      entity_id: input_number.compteur_pluie_off
+    data:
+      value: 0
+    action: input_number.set_value
+- id: '1778426099586'
+  alias: Allumer Prise Salon avec Bouton
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: 1ef950f7f209eee7e299cd8b470e6475
+    type: action
+    subtype: single
+    trigger: device
+  actions:
+  - action: switch.toggle
+    target:
+      entity_id: switch.prise_salon
+    data: {}
+  mode: single
+- id: '1779638411294'
+  alias: Réception Colis
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.bal_porte_contact
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.ouverture_portail_garage_door_contact
+    state: 'off'
+    for:
+      minutes: 1
+    enabled: true
+  - condition: state
+    entity_id: binary_sensor.bal_ouverture_porte_contact
+    state:
+    - 'on'
+    enabled: false
+  actions:
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.courrier_present
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      title: "\U0001F4E6Colis déposé"
+      message: Le facteur ou le livreur est passé !!!
+      data:
+        notification_icon: mdi:package-variant-closed-check
+        tag: courrier_bal
+        actions:
+        - action: COURRIER_RELEVE
+          title: "\U0001F4EC Courrier relevé"
+        - action: RAPPEL_18H
+          title: ⏰ Rappel 18h
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      title: "\U0001F4E6Colis déposé"
+      message: Le facteur ou le livreur est passé !!!
+      data:
+        notification_icon: mdi:package-variant-closed-check
+        tag: courrier_bal
+        actions:
+        - action: COURRIER_RELEVE
+          title: "\U0001F4EC Courrier relevé"
+        - action: RAPPEL_18H
+          title: ⏰ Rappel 18h
+  mode: single
+- id: '1779909313795'
+  alias: 'Verrouillage Porte Entrée après 21h '
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.ouverture_porte_entree_contact
+    from:
+    - 'on'
+    to:
+    - 'off'
+  conditions:
+  - condition: time
+    after: '21:01:00'
+  actions:
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - device_id: c9bfb683fd53e418050fe55a4aeaab42
+    domain: lock
+    entity_id: d85a4df6680399ab1591c75bca4f1a00
+    type: lock
+  mode: single
+- id: '1781366622731'
+  alias: Verrouillage Porte Entrée Promenade
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - person.damien
+    from:
+    - Quartier
+    to:
+    - Le_Passage
+  conditions:
+  - condition: device
+    device_id: c9bfb683fd53e418050fe55a4aeaab42
+    domain: lock
+    entity_id: d85a4df6680399ab1591c75bca4f1a00
+    type: is_unlocked
+  - condition: state
+    entity_id: group.nous
+    state: not_home
+  actions:
+  - device_id: c9bfb683fd53e418050fe55a4aeaab42
+    domain: lock
+    entity_id: d85a4df6680399ab1591c75bca4f1a00
+    type: lock
+  mode: single
+- id: '1781447920777'
+  alias: Verrouillage Porte Buanderie à 21h
+  description: ''
+  triggers:
+  - trigger: time
+    at: '21:00:00'
+  conditions:
+  - condition: device
+    device_id: c7f4021ca3e2b06fbcd04519f4692e85
+    domain: lock
+    entity_id: 3ddb639cf86ab900d9a8536efbeff334
+    type: is_unlocked
+  - type: is_not_open
+    condition: device
+    device_id: 85f2d0c622c2fb410ec74c17c7b2d989
+    entity_id: e1293ded05dc6a5573dee943472d5fe9
+    domain: binary_sensor
+  actions:
+  - device_id: c7f4021ca3e2b06fbcd04519f4692e85
+    domain: lock
+    entity_id: 3ddb639cf86ab900d9a8536efbeff334
+    type: lock
+  mode: single
+- id: '1781448042858'
+  alias: Verrouillage Porte Buanderie Après 21h
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.ouverture_porte_buanderie_contact
+    from:
+    - 'on'
+    to:
+    - 'off'
+  conditions:
+  - condition: time
+    after: '21:01:00'
+  actions:
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 2
+      milliseconds: 0
+  - device_id: c7f4021ca3e2b06fbcd04519f4692e85
+    domain: lock
+    entity_id: 3ddb639cf86ab900d9a8536efbeff334
+    type: lock
+  mode: single
+- id: '1781448280925'
+  alias: Verrouillage Porte Buanderie Lorsque Nous Absent
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.nous
+    from: home
+    to: not_home
+  conditions:
+  - condition: device
+    device_id: c7f4021ca3e2b06fbcd04519f4692e85
+    domain: lock
+    entity_id: 3ddb639cf86ab900d9a8536efbeff334
+    type: is_unlocked
+  - condition: not
+    conditions:
+    - condition: zone
+      entity_id: person.damien
+      zone: zone.quartier
+  actions:
+  - device_id: c7f4021ca3e2b06fbcd04519f4692e85
+    domain: lock
+    entity_id: 3ddb639cf86ab900d9a8536efbeff334
+    type: lock
+  mode: single
+- id: '1781448352404'
+  alias: Verrouillage Porte Buanderie Promenade
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - person.damien
+    from:
+    - Quartier
+    to:
+    - Le_Passage
+  conditions:
+  - condition: device
+    device_id: c7f4021ca3e2b06fbcd04519f4692e85
+    domain: lock
+    entity_id: 3ddb639cf86ab900d9a8536efbeff334
+    type: is_unlocked
+  - condition: state
+    entity_id: group.nous
+    state: not_home
+  actions:
+  - device_id: c7f4021ca3e2b06fbcd04519f4692e85
+    domain: lock
+    entity_id: 3ddb639cf86ab900d9a8536efbeff334
+    type: lock
+  mode: single
+- id: '1781448441829'
+  alias: Alerte Batterie Porte Buanderie Faible
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.porte_buanderie_battery
+    below: 15
+  conditions: []
+  actions:
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      message: Attention la batterie de la serrure de la porte d'entrée est à recharger.
+      title: Recharger Batterie Porte Entrée
+      data:
+        notification_icon: mdi:battery-alert-variant
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      message: Attention la batterie de la serrure de la porte d'entrée est à recharger.
+      title: Recharger Batterie Porte Entrée
+      data:
+        notification_icon: mdi:battery-alert-variant
+  mode: single
+- id: '1782052611177'
+  alias: Fermeture Volet TV Cuisine
+  description: ''
+  triggers:
+  - trigger: time
+    at: '13:00:00'
+  conditions:
+  - condition: state
+    entity_id: group.nous
+    state:
+    - not_home
+  actions:
+  - device_id: 3f0db5517c96affef4e0c3be9f059838
+    domain: cover
+    entity_id: ebb670607e8433bb2d151cc804c0c558
+    type: set_position
+    position: 27
+  - device_id: aec58c2882ca7d8965bef7223e6675fd
+    domain: cover
+    entity_id: fab149a7a9de2bb0a0e37b4b3c1faa09
+    type: set_position
+    position: 35
+  mode: single
+- id: '1782368453693'
+  alias: Détection Fumée Garage
+  description: ''
+  triggers:
+  - type: smoke
+    device_id: efeedaa1e721e783f415085fac2c3f6a
+    entity_id: 825431de14a09ea97de29d5290a1659d
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      data:
+        notification_icon: mdi:fire-alert
+      message: Fumée Détectée dans le garage
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      message: Fumée Détectée dans le garage
+      title: Fumée Détectée !!!
+      data:
+        notification_icon: mdi:fire-alert
+  - if:
+    - condition: device
+      device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: is_locked
+    then:
+    - device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: unlock
+  mode: single
+- id: '1782657811859'
+  alias: Détection Fumée Buanderie
+  description: ''
+  triggers:
+  - type: smoke
+    device_id: 8319524c0525515129f2fac7d0271bc5
+    entity_id: 6d8a47bb3dd49b6c32eb65abb185c457
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      data:
+        notification_icon: mdi:fire-alert
+      message: Fumée Détectée dans la buanderie
+  - action: notify.mobile_app_sm_g781b
+    metadata: {}
+    data:
+      message: Fumée Détectée dans la buanderie
+      title: Fumée Détectée !!!
+      data:
+        notification_icon: mdi:fire-alert
+  - if:
+    - condition: device
+      device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: is_locked
+    then:
+    - device_id: c9bfb683fd53e418050fe55a4aeaab42
+      domain: lock
+      entity_id: d85a4df6680399ab1591c75bca4f1a00
+      type: unlock
+  mode: single
+- id: '1782664209913'
+  alias: Frigo - Alerte montée rapide de température
+  description: 'Alerte si le frigo monte de plus de 3°C en 10 minutes
+
+    '
+  triggers:
+  - minutes: /5
+    trigger: time_pattern
+  actions:
+  - if:
+    - condition: template
+      value_template: '{{ delta > 2 }}'
+    then:
+    - data:
+        title: "\U0001F6A8 Frigo cuisine - Alerte température"
+        message: 'Montée de {{ delta | round(1) }}°C en 10 min ! Température actuelle
+          : {{ temp_actuelle }}°C
+
+          '
+        data:
+          importance: high
+          ttl: 0
+          priority: high
+          notification_icon: mdi:thermometer-alert
+      action: notify.mobile_app_galaxys25
+    - action: notify.mobile_app_sm_g781b
+      data:
+        message: 'Montée de {{ delta | round(1) }}°C en 10 min ! Température actuelle
+          : {{ temp_actuelle }}°C'
+        title: "\U0001F6A8 Frigo cuisine - Alerte température"
+        data:
+          importance: high
+          ttl: 0
+          priority: high
+          notification_icon: mdi:thermometer-alert
+  - target:
+      entity_id: input_number.evolution_temperature_frigo_cuisine
+    data:
+      value: '{{ temp_actuelle }}'
+    action: input_number.set_value
+  mode: single
+  variables:
+    temp_actuelle: '{{ states(''sensor.capteur_temperature_frigo_cuisine_temperature'')
+      | float(0) }}'
+    temp_reference: '{{ states(''input_number.evolution_temperature_frigo_cuisine'')
+      | float(0) }}'
+    delta: '{{ temp_actuelle - temp_reference }}'
+- id: '1784650833108'
+  alias: Notification Problème Impression 3D
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.p1s_erreur_d_impression
+    from:
+    - 'off'
+    - 'on'
+  conditions: []
+  actions:
+  - action: notify.mobile_app_galaxys25
+    metadata: {}
+    data:
+      title: ⚠️ Problème Impressions 3D
+      message: L'imprimante 3D rencontre un problème.
+      data:
+        notification_icon: mdi:printer-3d-nozzle-alert
+  mode: single
+- id: '1785153705579'
+  alias: Récupération Dernière Ouverture Portail
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.ouverture_portail_garage_door_contact
+    from:
+    - 'on'
+    to:
+    - 'off'
+  conditions: []
+  actions:
+  - data:
+      timestamp: '{{ as_timestamp(now()) }}'
+    action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.date_et_heure_derniere_ouverture_portail
+  mode: single
+- id: '1785603977429'
+  alias: Détection Caméra Cour Damien 2
+  description: ''
+  use_blueprint:
+    path: ampersandru/Beta.yaml
+    input:
+      camera:
+      - camera.camera_cour
+      notify_device: 12a79500c39768be13ccb4e257e431db
+      attachment: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/thumbnail.jpg'
+      critical: 'true'
+      zones:
+      - entree_humains
+      - entree_animaux
+      zone_multi: false
+      zone_filter: true
+      color: steelblue
+      icon: mdi:{{'motion-sensor' if label == 'Person' else 'dog' if label == 'Dog'
+        else 'cat' if label == 'Cat' else 'car' if label == 'Car' else 'home-assistant'}}
+      presence_filter:
+      - ''
+      video: '{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/clip.mp4'
+      message: '{{ ''Damien'' if label == ''Damien'' else ''Une personne'' if label
+        == ''Person'' else ''Un chien'' if label==''Dog'' else ''Minouche'' if label==''Cat''}}
+        {{''a été détectée'' if label==''Person'' else ''a été détecté'' if label==''Dog''
+        or ''Cat'' }} sur la {{ camera_name }} '
+      attachment_2: ''
+      final_update: true
+      genai_sprinter: true
+      genai_final: true
+- id: '1785960030790'
+  alias: Ajouter 1 Wh à Abonnement EDF
+  description: Augmente la consommation de l'abonnement EDF de 1 Wh chaque jour.
+  triggers:
+  - hours: '1'
+    trigger: time_pattern
+  actions:
+  - target:
+      entity_id: input_number.compteur_abonnement_edf_journalier
+    data: {}
+    action: input_number.increment
+- id: '1786047261603'
+  alias: Mise à jour automatique du PDF EDF
+  description: Va chercher la nouvelle version du PDF contenant le prix de l'abonnement
+    et des kwh, entre le 1 et le 5 février et même chose en aout.
+  triggers:
+  - trigger: time_pattern
+    hours: /12
+  conditions:
+  - condition: template
+    value_template: '{{ now().month in [2, 8] and now().day in range(1, 6) }}'
+  actions:
+  - action: homeassistant.reload_config_entry
+    metadata: {}
+    data:
+      entry_id: 01KZCA676EVE5J8GFVHWQNEC58
+  mode: single

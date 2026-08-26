@@ -1,0 +1,16 @@
+template:
+- trigger:
+  - id: "on"
+    platform: event
+    event_type: nut.ups_event
+    event_data:
+      notify_type: ONBATT
+  - id: "off"
+    platform: event
+    event_type: nut.ups_event
+    event_data:
+      notify_type: ONLINE
+  binary_sensor:
+  - name: UPS on Batt
+    unique_id: ups_on_batt
+    state: "{{ trigger.id }}"

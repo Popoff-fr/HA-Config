@@ -1,0 +1,21 @@
+sensor:
+  - platform: statistics
+    entity_id: sensor.production_solaire_instantanee
+    name: "Moyenne production solaire 30min"
+    max_age:
+      minutes: 30
+    state_characteristic: mean
+    precision: 0
+  - platform: statistics
+    entity_id: sensor.production_solaire_cabanon_instantanee
+    name: "Moyenne production solaire cabanon 30min"
+    max_age:
+      minutes: 30
+    state_characteristic: mean
+    precision: 0
+  - platform: statistics
+    entity_id: sensor.production_solaire_instantanee
+    name: "Moyenne production solaire 4h"
+    max_age:
+      hours: 4
+    state_characteristic: mean

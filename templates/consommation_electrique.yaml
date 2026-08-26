@@ -1,0 +1,24 @@
+- sensor:
+    - name: "Puissance Consommation Tableau Réelle"
+      unique_id: puissance_consommation_tableau_reelle
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: >
+        {% set grid = states('sensor.shelly_phase_tableau_consommation_puissance') %}
+        {% set solar = states('sensor.production_solaire_cabanon_instantanee') %}
+        {% set grid_val = grid | float(0) if grid not in ['unknown', 'unavailable', 'none'] else 0 %}
+        {% set solar_val = solar | float(0) if solar not in ['unknown', 'unavailable', 'none'] else 0 %}
+        {{ grid_val + solar_val }}
+      availability: >
+        {{ states('sensor.shelly_phase_tableau_consommation_puissance') not in ['unknown', 'unavailable', 'none'] }}
+    - name: "Export EDF Instantané"
+      unique_id: export_edf_instantane
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: >
+        {% set grid = states('sensor.shelly_phase_edf_puissance') | float(0) %}
+        {{ [ -grid, 0 ] | max }}
+      availability: >
+        {{ states('sensor.shelly_phase_edf_puissance') not in ['unknown', 'unavailable', 'none'] }}

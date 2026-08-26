@@ -1,0 +1,305 @@
+# ========================================
+# PACKAGE : Surveillance Imprimante 3D + Gemini
+# FICHIER : /config/packages/pkg_google_gemini_imp_3d.yaml
+# VERSION : 2.0 - CORRIGÉE
+# ========================================
+
+# ========================================
+# INPUT HELPERS (stockage infos par impression)
+# ========================================
+input_number:
+  gemini_analyses_current_print:
+    name: "Gemini - Analyses (impression actuelle)"
+    min: 0
+    max: 1000
+    step: 1
+    icon: mdi:counter
+    
+  gemini_problemes_current_print:
+    name: "Gemini - Problèmes détectés"
+    min: 0
+    max: 100
+    step: 1
+    icon: mdi:alert-circle
+
+input_text:
+  gemini_last_response:
+    name: "Gemini - Dernière réponse"
+    max: 255
+    icon: mdi:message-text
+    
+  gemini_current_print_name:
+    name: "Gemini - Nom impression"
+    max: 100
+    icon: mdi:printer-3d
+
+input_datetime:
+  gemini_last_check:
+    name: "Gemini - Dernière vérification"
+    has_date: true
+    has_time: true
+
+# ========================================
+# AUTOMATISATIONS
+# ========================================
+automation:
+  # ========================================
+  # AUTOMATISATION PRINCIPALE - SURVEILLANCE IA
+  # ⚠️ CHOISISSEZ LA MÉTHODE A OU B CI-DESSOUS
+  # ========================================
+  
+  - alias: "🔍 Surveillance Impression 3D - IA Gemini"
+    id: p1s_ai_monitoring_gemini
+    trigger:
+      - trigger: time_pattern
+        minutes: "/5"
+    condition:
+      - condition: state
+        entity_id: sensor.p1s_etape_actuelle  # ← PERSONNALISER
+        state: "printing"
+    action:
+      # Capture de l'image
+      - action: camera.snapshot
+        target:
+          entity_id: camera.p1s_camera  # ← PERSONNALISER
+        data:
+          filename: /config/www/p1s_ai_check.jpg
+      
+      - delay: {seconds: 2}
+      
+      # Incrémentation du compteur d'analyses
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.gemini_analyses_current_print
+        data:
+          value: "{{ states('input_number.gemini_analyses_current_print') | float + 1 }}"
+      
+      # ========================================
+      # MÉTHODE A : Utilisation de agent_id
+      # ========================================
+      - action: ai_task.generate_data
+        data:
+          entity_id: ai_task.google_ai_task
+          task_name: Analyse de l'image 3D  # ← REMPLACER par votre agent_id
+          instructions: "Tu es un expert en impression 3D. Analyse cette image d'une imprimante 3D en cours d'impression. Détecte ces problèmes : spaghetti (impression détachée), détachement du plateau, sous-extrusion (lignes fines), sur-extrusion (trop de plastique), problème de première couche. Je ne veux pas d'informations concernant d'éventuels autres problèmes. Si TOUT VA BIEN, réponds UNIQUEMENT par le mot 'OK'. Si tu détectes un problème, réponds 'PROBLÈME: [description courte en une phrase]'."
+          attachments:
+            media_content_id: media-source://camera/camera.p1s_camera
+            media_content_type: image/jpeg
+        response_variable: gemini_response
+      
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.gemini_last_response
+        data:
+          value: "{{ gemini_response.data }}"  # ← MÉTHODE B: changer en .data
+      
+      # Horodatage
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.gemini_last_check
+        data:
+          datetime: "{{ now().isoformat() }}"
+      
+      # Log système
+      - action: system_log.write
+        data:
+          message: "Gemini: {{ gemini_response.text }}"  # ← MÉTHODE B: changer en .data
+          level: info
+      
+      # Vérification si problème détecté
+      # ⚠️ MÉTHODE B : remplacez .text par .data
+      - condition: template
+        value_template: "{{ 'OK' not in gemini_response.data }}"  # ← MÉTHODE B: changer en .data
+      
+      # Incrémentation du compteur de problèmes
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.gemini_problemes_current_print
+        data:
+          value: "{{ states('input_number.gemini_problemes_current_print') | float + 1 }}"
+      
+      # Notification de problème
+      - action: notify.mobile_app_galaxys25  # ← PERSONNALISER
+        data:
+          title: "⚠️ Problème Impression 3D !"
+          message: "{{ gemini_response.data }}"  # ← MÉTHODE B: changer en .data
+          data:
+            notification_icon: mdi:printer-eye
+            image: "/local/p1s_ai_check.jpg?t={{ now().timestamp() | int }}"
+            priority: high
+            ttl: 0
+            color: "#FF0000"
+            tag: "print_issue"
+            actions:
+              - action: "PAUSE_PRINT"
+                title: "⏸️ Pause"
+              - action: "STOP_PRINT"
+                title: "🛑 Arrêter"
+
+  # ========================================
+  # DÉBUT D'IMPRESSION
+  # ========================================
+  - alias: "🖨️ Début Surveillance Impression 3D"
+    id: print_start_gemini_notification
+    trigger:
+      - trigger: state
+        entity_id: sensor.p1s_etape_actuelle  # ← PERSONNALISER
+        to: "printing"
+    action:
+      # Réinitialisation des compteurs
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.gemini_analyses_current_print
+        data:
+          value: 0
+      
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.gemini_problemes_current_print
+        data:
+          value: 0
+      
+      # Stockage du nom de l'impression
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.gemini_current_print_name
+        data:
+          value: "{{ states('sensor.p1s_nom_de_la_tache') }}"  # ← PERSONNALISER
+      
+      # Capture de démarrage
+      - action: camera.snapshot
+        target:
+          entity_id: camera.p1s_camera  # ← PERSONNALISER
+        data:
+          filename: /config/www/p1s_start.jpg
+      
+      - delay: {seconds: 2}
+      
+      # Notification de démarrage
+      - action: notify.mobile_app_galaxys25  # ← PERSONNALISER
+        data:
+          title: "🖨️ Impression Démarrée"
+          message: "{{ states('sensor.p1s_nom_de_la_tache') }} - Surveillance IA activée"  # ← PERSONNALISER
+          data:
+            notification_icon: mdi:printer-eye
+            image: "/local/p1s_start.jpg?t={{ now().timestamp() | int }}"
+            priority: normal
+            color: "#0000FF"
+            tag: "print_status"
+
+  # ========================================
+  # FIN D'IMPRESSION
+  # ========================================
+  - alias: "✅ Fin Impression 3D Réussie"
+    id: print_completed_gemini_notification
+    trigger:
+      - trigger: state
+        entity_id: sensor.p1s_etape_actuelle  # ← PERSONNALISER
+        to: "idle"
+        from: "printing"
+    action:
+      # Capture finale
+      - action: camera.snapshot
+        target:
+          entity_id: camera.p1s_camera  # ← PERSONNALISER
+        data:
+          filename: /config/www/p1s_final.jpg
+      
+      - delay: {seconds: 2}
+      
+      # Notification de fin avec statistiques
+      - action: notify.mobile_app_galaxys25  # ← PERSONNALISER
+        data:
+          title: "✅ Impression Terminée"
+          message: >
+            {{ states('input_text.gemini_current_print_name') }}
+            
+            📊 Analyses IA: {{ states('input_number.gemini_analyses_current_print') | int }}
+            ⚠️ Problèmes: {{ states('input_number.gemini_problemes_current_print') | int }}
+          data:
+            notification_icon: mdi:printer-eye
+            image: "/local/p1s_final.jpg?t={{ now().timestamp() | int }}"
+            priority: high
+            ttl: 0
+            color: "#00FF00"
+            tag: "print_status"
+
+  # ========================================
+  # IMPRESSION EN PAUSE
+  # ========================================
+  - alias: "⏸️ Alerte Impression en Pause"
+    id: print_paused_alert_gemini
+    trigger:
+      - trigger: state
+        entity_id: sensor.p1s_etape_actuelle  # ← PERSONNALISER
+        to:
+          - "paused_filament_runout"
+          - "paused_nozzle_clog"
+          - "paused_first_layer_error"
+          - "paused_user"
+          - "paused_nozzle_temperature_malfunction"
+          - "paused_heat_bed_temperature_malfunction"
+          - "paused_front_cover_falling"
+    action:
+      # Capture de pause
+      - action: camera.snapshot
+        target:
+          entity_id: camera.p1s_camera  # ← PERSONNALISER
+        data:
+          filename: /config/www/p1s_pause.jpg
+      
+      - delay: {seconds: 2}
+      
+      # Notification de pause
+      - action: notify.mobile_app_galaxys25  # ← PERSONNALISER
+        data:
+          notification_icon: mdi:printer-eye
+          title: "⏸️ Impression en Pause"
+          message: "{{ trigger.to_state.state | replace('_', ' ') | title }}"
+          data:
+            image: "/local/p1s_pause.jpg?t={{ now().timestamp() | int }}"
+            priority: high
+            color: "#FFA500"
+            tag: "print_pause"
+
+  # ========================================
+  # ACTIONS DEPUIS NOTIFICATIONS
+  # ========================================
+  - alias: "🛑 Arrêt Impression depuis Notification"
+    id: stop_print_from_notification_gemini
+    trigger:
+      - trigger: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: STOP_PRINT
+    action:
+      - action: button.press
+        target:
+          entity_id: button.p1s_arreter_l_impression  # ← PERSONNALISER
+
+  - alias: "⏸️ Pause Impression depuis Notification"
+    id: pause_print_from_notification_gemini
+    trigger:
+      - trigger: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: PAUSE_PRINT
+    action:
+      - action: button.press
+        target:
+          entity_id: button.p1s_mettre_en_pause_l_impression  # ← PERSONNALISER
+
+# ========================================
+# TEMPLATE SENSOR
+# ========================================
+template:
+  - sensor:
+      - name: "Imprimante 3D - Statut Lisible"
+        unique_id: p1s_status_readable
+        state: >
+          {% set s = states('sensor.p1s_etape_actuelle') %}
+          {% if s == 'printing' %}En impression
+          {% elif s == 'idle' %}Inactive
+          {% elif 'paused' in s %}En pause
+          {% else %}{{ s | replace('_', ' ') | title }}{% endif %}
+        icon: mdi:printer-3d

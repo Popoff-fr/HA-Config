@@ -1,0 +1,5 @@
+streams:
+  camera-bureau_charlotte: http://192.168.2.22/flv?port=1935&app=bcs&stream=channel0_main.bcs&user=admin&password=AccessCAMERA#video=copy#audio=copy#audio=opus
+  camera-cour: rtsp://Damien:24Da07Em@192.168.2.23:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1
+  camera-salon: rtsp://Damien:24Da07Em@192.168.2.20:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1
+  camera-salle_a_manger: rtsp://admin:AccessCAMERA@192.168.2.21:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1

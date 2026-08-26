@@ -1,0 +1,45 @@
+esphome:
+  name: sam-proxy
+  friendly_name: SaM-Proxy
+  name_add_mac_suffix: false
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: !secret wifi_ssid_routeur
+  password: !secret wifi_password_routeur
+  manual_ip:
+    static_ip: 192.168.2.181
+    gateway: 192.168.2.1
+    subnet: 255.255.255.0
+
+api:
+  encryption:
+    key: "wIC6AmH1Hul3w4f8mTrqRJ78YMvSU/u8Vom2CQxa8Sw="
+
+logger:
+
+ota:
+  platform: esphome
+  password: "60db5f7b237eb28613ac1199d5795612"
+improv_serial:
+
+esp32_ble:
+  max_connections: 4
+
+esp32_ble_tracker:
+  scan_parameters:
+    interval: 1100ms
+    window: 1100ms
+    active: false
+
+bluetooth_proxy:
+  active: true
+
+button:
+  - platform: restart
+    name: "Redémarrer proxy"
+
