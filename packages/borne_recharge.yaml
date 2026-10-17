@@ -1,0 +1,122 @@
+modbus:
+  - name: anker_ev
+    type: tcp
+    host: 192.168.2.175
+    port: 502
+    delay: 2
+    timeout: 5
+    sensors:
+      - name: "Wallbox Puissance"
+        unique_id: wallbox_puissance
+        slave: 1
+        address: 20068
+        input_type: input
+        data_type: uint32
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+
+      - name: "Wallbox Énergie session"
+        unique_id: wallbox_energie_session
+        slave: 1
+        address: 20084
+        input_type: input
+        data_type: uint32
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+
+      - name: "Wallbox Tension L1"
+        unique_id: wallbox_tension_l1
+        slave: 1
+        address: 20053
+        input_type: input
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+
+      - name: "Wallbox Courant L1"
+        unique_id: wallbox_courant_l1
+        slave: 1
+        address: 20059
+        input_type: input
+        scale: 0.01
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+
+      - name: "Wallbox Code statut"
+        unique_id: wallbox_statut
+        slave: 1
+        address: 20097
+        input_type: input
+        data_type: uint16
+        
+      - name: "Wallbox Limite courant lue"
+        unique_id: wallbox_limite_lue
+        slave: 1
+        address: 21001
+        input_type: holding
+        scale: 0.1
+        unit_of_measurement: "A"
+        device_class: current
+
+input_number:
+  wallbox_puissance_souhaitee:
+    name: Wallbox puissance souhaitée
+    min: 1400
+    max: 5000
+    step: 100
+    unit_of_measurement: "W"
+    mode: slider
+
+automation:
+  - alias: "Wallbox : appliquer la puissance souhaitée"
+    triggers:
+      - trigger: state
+        entity_id: input_number.wallbox_puissance_souhaitee
+        not_from: [unavailable, unknown]
+        not_to: [unavailable, unknown]
+    actions:
+      - action: modbus.write_register
+        data:
+          hub: anker_ev
+          address: 21001
+          slave: 1
+          value: >
+            {% set a = ((trigger.to_state.state | float(1400)) / 230) | int %}
+            {{ ([6, [a, 32] | min] | max) * 10 }}
+    mode: restart
+
+script:
+  wallbox_demarrer_charge:
+    alias: "Wallbox : démarrer la charge"
+    sequence:
+      - action: modbus.write_register
+        data:
+          hub: anker_ev
+          address: 21001
+          slave: 1
+          value: >
+            {% set a = ((states('input_number.wallbox_puissance_souhaitee') | float(1400)) / 230) | int %}
+            {{ ([6, [a, 21] | min] | max) * 10 }}
+      - delay: "00:00:01"
+      - action: modbus.write_register
+        data:
+          hub: anker_ev
+          address: 21000
+          slave: 1
+          value: 1
+
+  wallbox_arreter_charge:
+    alias: "Wallbox : arrêter la charge"
+    sequence:
+      - action: modbus.write_register
+        data:
+          hub: anker_ev
+          address: 21000
+          slave: 1
+          value: 2

@@ -1,0 +1,148 @@
+input_boolean:
+  ev_mode_solaire:
+    name: Charge voiture au surplus solaire
+    icon: mdi:solar-power
+
+input_number:
+  ev_seuil_soc_batterie:
+    name: Seuil batterie avant voiture
+    min: 20
+    max: 100
+    step: 5
+    unit_of_measurement: "%"
+    mode: slider
+
+template:
+  - sensor:
+      - name: "Surplus solaire voiture"
+        unique_id: surplus_solaire_voiture
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        availability: >
+          {{ has_value('sensor.shelly_phase_edf_puissance')
+             and has_value('sensor.solarflow_2400_pro_output_home_power')
+             and has_value('sensor.solarflow_2400_pro_grid_input_power') }}
+        state: >
+          {% set reseau = states('sensor.shelly_phase_edf_puissance') | float(0) %}
+          {% set voiture = states('sensor.wallbox_puissance') | float(0) %}
+          {% set decharge = states('sensor.solarflow_2400_pro_output_home_power') | float(0) %}
+          {% set charge = states('sensor.solarflow_2400_pro_grid_input_power') | float(0) %}
+          {{ [(-reseau + voiture - decharge + charge), 0] | max | round(0) }}
+
+  - binary_sensor:
+      - name: "EV solaire demarrage ok"
+        unique_id: ev_solaire_demarrage_ok
+        delay_on: "00:03:00"
+        state: >
+          {{ states('sensor.surplus_solaire_voiture') | float(0) >= 1600
+             and states('sensor.i2400_01772_soc_level') | float(0)
+                 >= states('input_number.ev_seuil_soc_batterie') | float(100) }}
+
+      - name: "EV solaire surplus insuffisant"
+        unique_id: ev_solaire_surplus_insuffisant
+        delay_on: "00:05:00"
+        state: "{{ states('sensor.surplus_solaire_voiture') | float(0) < 1200 }}"
+
+      - name: "EV solaire batterie basse"
+        unique_id: ev_solaire_batterie_basse
+        delay_on: "00:02:00"
+        state: >
+          {{ states('sensor.i2400_01772_soc_level') | float(100)
+             < states('input_number.ev_seuil_soc_batterie') | float(100) - 5 }}
+
+automation:
+  # 1. Démarrage
+  - alias: "Voiture solaire : démarrer"
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.ev_solaire_demarrage_ok
+        to: "on"
+      - trigger: state
+        entity_id: input_boolean.ev_mode_solaire
+        to: "on"
+      - trigger: state
+        entity_id: sensor.wallbox_code_statut
+      - trigger: time_pattern
+        minutes: "/5"
+    conditions:
+      - condition: state
+        entity_id: input_boolean.ev_mode_solaire
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.ev_solaire_demarrage_ok
+        state: "on"
+      - condition: template
+        value_template: "{{ states('sensor.wallbox_code_statut') in ['1', '3', '4'] }}"
+    actions:
+      - action: modbus.write_register
+        data:
+          hub: anker_ev
+          address: 21001
+          slave: 1
+          value: >
+            {% set a = (states('sensor.surplus_solaire_voiture') | float(0) / 235) | int %}
+            {{ ([6, [a, 21] | min] | max) * 10 }}
+      - delay: "00:00:01"
+      - action: modbus.write_register
+        data:
+          hub: anker_ev
+          address: 21000
+          slave: 1
+          value: 1
+    mode: single
+
+  # 2. Régulation du courant pendant la charge
+  - alias: "Voiture solaire : réguler le courant"
+    triggers:
+      - trigger: time_pattern
+        minutes: "/1"
+    conditions:
+      - condition: state
+        entity_id: input_boolean.ev_mode_solaire
+        state: "on"
+      - condition: template
+        value_template: "{{ states('sensor.wallbox_code_statut') == '2' }}"
+    actions:
+      - variables:
+          cible: >
+            {% set a = (states('sensor.surplus_solaire_voiture') | float(0) / 235) | int %}
+            {{ [6, [a, 32] | min] | max }}
+          actuel: "{{ states('sensor.wallbox_limite_courant_lue') | float(0) | round(0) | int }}"
+      - condition: template
+        value_template: "{{ cible | int != actuel }}"
+      - action: modbus.write_register
+        data:
+          hub: anker_ev
+          address: 21001
+          slave: 1
+          value: "{{ (cible | int) * 10 }}"
+    mode: single
+
+  # 3. Arrêt : surplus insuffisant OU batterie sous le seuil
+  - alias: "Voiture solaire : arrêter"
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.ev_solaire_surplus_insuffisant
+          - binary_sensor.ev_solaire_batterie_basse
+        to: "on"
+      - trigger: time_pattern
+        minutes: "/2"
+    conditions:
+      - condition: state
+        entity_id: input_boolean.ev_mode_solaire
+        state: "on"
+      - condition: template
+        value_template: "{{ states('sensor.wallbox_code_statut') == '2' }}"
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.ev_solaire_surplus_insuffisant
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.ev_solaire_batterie_basse
+            state: "on"
+    actions:
+      - action: script.wallbox_arreter_charge
+    mode: single

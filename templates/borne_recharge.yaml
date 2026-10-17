@@ -1,0 +1,12 @@
+- sensor:
+    - name: "Wallbox état"
+      unique_id: wallbox_etat_texte
+      state: >
+        {% set codes = {0:'Repos',1:'Préparation',2:'En charge',3:'Borne en pause',
+          4:'Véhicule en pause',5:'Charge terminée',6:'Réservée',7:'Désactivée',8:'Erreur'} %}
+        {% set s = states('sensor.wallbox_code_statut') %}
+        {% if s in ['unavailable', 'unknown'] %}
+          Indisponible
+        {% else %}
+          {{ codes.get(s | int(-1), 'Code ' ~ s) }}
+        {% endif %}

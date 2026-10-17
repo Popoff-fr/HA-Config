@@ -1,4 +1,6 @@
 order:
+  - item: "Voice Satellite"
+    hide: true
   - item: hacs
     bottom: true
     order: 0

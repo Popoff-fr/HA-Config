@@ -1,8 +1,25 @@
+#- device_tracker:
+#    - name: "Suivi Charlotte"
+#      unique_id: suivi_charlotte_device_tracker
+#      in_zones: >
+#        {% if states('sensor.sm_g781b_wifi_connection') in ['Charlotte&Damien', 'Charlotte&DamienExt2.4'] %}
+#          {{ ['zone.home'] }}
+#        {% else %}
+#          {{ [] }}
+#        {% endif %}
+
+- binary_sensor:
+    - name: "Charlotte wifi maison"
+      unique_id: charlotte_wifi_maison
+      delay_off: "00:01:00"
+      state: >
+        {{ states('sensor.sm_g781b_wifi_connection') in ['Charlotte&Damien', 'Charlotte&DamienExt2.4']
+          or is_state('device_tracker.tracker_ble_charlotte', 'home') }}
 - device_tracker:
     - name: "Suivi Charlotte"
       unique_id: suivi_charlotte_device_tracker
       in_zones: >
-        {% if states('sensor.sm_g781b_wifi_connection') in ['Charlotte&Damien', 'Charlotte&DamienExt2.4'] %}
+        {% if is_state('binary_sensor.charlotte_wifi_maison', 'on') %}
           {{ ['zone.home'] }}
         {% else %}
           {{ [] }}

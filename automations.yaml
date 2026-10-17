@@ -9,10 +9,13 @@
     trigger: device
   conditions: []
   actions:
-  - type: turn_on
-    device_id: bf9be7d178261b82e344454bff26ce30
-    entity_id: f696305cbe0ff9b2dcbfbd0c70ed623e
-    domain: switch
+  - action: siren.turn_on
+    metadata: {}
+    target:
+      entity_id: siren.detecteur_fumee
+    data:
+      volume_level: 0.5
+      duration: '60'
   - action: notify.mobile_app_galaxys25
     metadata: {}
     data:
@@ -51,10 +54,13 @@
     trigger: device
   conditions: []
   actions:
-  - type: turn_on
-    device_id: 9f2d9874cebd5507188211e211fd0c37
-    entity_id: 540f5186bae346650abc13bf0d41f08d
-    domain: switch
+  - action: siren.turn_on
+    metadata: {}
+    target:
+      entity_id: siren.detecteur_feu
+    data:
+      volume_level: 0.5
+      duration: '90'
   - device_id: 6a59a64a9eea2ac236a4381a6e2e2a07
     domain: mobile_app
     type: notify
@@ -1839,8 +1845,8 @@
   description: ''
   triggers:
   - type: battery_level
-    device_id: 67ddffbacdf678bf2a05cc4348e7fdc4
-    entity_id: e4536392097e6380da8c0beca6d53cf7
+    device_id: 48b747003e0ea9077434ce8a1592aa78
+    entity_id: a1a48693dd490931322f35c1c3cd96ef
     domain: sensor
     trigger: device
     above: 95
@@ -1882,8 +1888,8 @@
   conditions:
   - type: is_battery_level
     condition: device
-    device_id: 67ddffbacdf678bf2a05cc4348e7fdc4
-    entity_id: e4536392097e6380da8c0beca6d53cf7
+    device_id: 48b747003e0ea9077434ce8a1592aa78
+    entity_id: a1a48693dd490931322f35c1c3cd96ef
     domain: sensor
     below: 50
   actions:
@@ -2097,8 +2103,8 @@
   description: ''
   triggers:
   - type: battery_level
-    device_id: 67ddffbacdf678bf2a05cc4348e7fdc4
-    entity_id: e4536392097e6380da8c0beca6d53cf7
+    device_id: 48b747003e0ea9077434ce8a1592aa78
+    entity_id: a1a48693dd490931322f35c1c3cd96ef
     domain: sensor
     trigger: device
     below: 25
@@ -3553,10 +3559,10 @@
   - action: notify.mobile_app_galaxys25
     metadata: {}
     data:
-      title: "\U0001F4E6Lettre déposée"
+      title: ✉️Lettre déposée
       message: Le facteur ou le livreur est passé !!!
       data:
-        notification_icon: mdi:package-variant-closed-check
+        notification_icon: mdi:email-outline
         tag: courrier_bal
         actions:
         - action: COURRIER_RELEVE
@@ -3569,8 +3575,7 @@
       title: "\U0001F4E6Lettre déposée"
       message: Le facteur ou le livreur est passé !!!
       data:
-        notification_icon: mdi:package-variant-closed-check
-        tag: courrier_bal
+        notification_icon: mdi:email-outline
         actions:
         - action: COURRIER_RELEVE
           title: "\U0001F4EC Courrier relevé"
@@ -4248,80 +4253,6 @@
       entity_id: input_boolean.intrusion
     data: {}
   mode: single
-- id: '1777390910171'
-  alias: test
-  description: ''
-  triggers: []
-  conditions: []
-  actions:
-  - action: notify.mobile_app_galaxys25
-    data:
-      message: command_volume_level
-      data:
-        media_stream: music_stream
-        command: 15
-  - action: notify.mobile_app_galaxys25
-    data:
-      message: command_volume_level
-      data:
-        media_stream: notification_stream
-        command: 15
-  - action: notify.mobile_app_galaxys25
-    data:
-      message: command_ringer_mode
-      data:
-        command: normal
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 1
-      milliseconds: 0
-  - action: notify.mobile_app_galaxys25
-    metadata: {}
-    data:
-      message: Une intrusion a été detectée dans le jardin !!!
-      title: URGENT Intrusion jardin
-      data:
-        notification_icon: mdi:alert
-        sticky: 'true'
-        persistent: true
-        color: red
-        clickAction: /dashboard-mobile/cameras
-        ttl: 0
-        priority: high
-        channel: alarm_stream_max
-        importance: high
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 2
-      milliseconds: 0
-  - action: notify.mobile_app_galaxys25
-    data:
-      message: TTS
-      data:
-        tts_text: Attention ! Intrusion détectée dans le jardin !
-        channel: alarm_stream_max
-        ttl: 0
-        priority: high
-  mode: single
-- id: '1777819137071'
-  alias: Réinitialiser le compte de pluie à minuit
-  description: ''
-  triggers:
-  - at: 00:00:00
-    trigger: time
-  actions:
-  - target:
-      entity_id: input_number.compteur_pluie_on
-    data:
-      value: 0
-    action: input_number.set_value
-  - target:
-      entity_id: input_number.compteur_pluie_off
-    data:
-      value: 0
-    action: input_number.set_value
 - id: '1778426099586'
   alias: Allumer Prise Salon avec Bouton
   description: ''
@@ -4583,12 +4514,12 @@
     domain: cover
     entity_id: ebb670607e8433bb2d151cc804c0c558
     type: set_position
-    position: 27
+    position: 34
   - device_id: aec58c2882ca7d8965bef7223e6675fd
     domain: cover
     entity_id: fab149a7a9de2bb0a0e37b4b3c1faa09
     type: set_position
-    position: 35
+    position: 42
   mode: single
 - id: '1782368453693'
   alias: Détection Fumée Garage
@@ -4803,5 +4734,154 @@
   - action: homeassistant.reload_config_entry
     metadata: {}
     data:
-      entry_id: 01KZCA676EVE5J8GFVHWQNEC58
+      entry_id: 01M3031ZFM2WPA1QKT5N95T482
   mode: single
+- id: '1789972165202'
+  alias: 'Mise à jour coût abonnement si valide dans PDF Scrape '
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.abonnement_mensuel_tarif_bleu_base
+    trigger: state
+  conditions:
+  - condition: template
+    value_template: '{{ not states(''sensor.abonnement_mensuel_tarif_bleu_base'')
+      in [''unavailable'', ''unknown''] }}
+
+      '
+  actions:
+  - target:
+      entity_id: input_number.abonnement_mensuel_tarif_bleu_base_dashboard_energy
+    data:
+      value: '{{ states(''sensor.abonnement_mensuel_tarif_bleu_base'') }}'
+    action: input_number.set_value
+- id: '1789972290630'
+  alias: 'Mise à jour coût kWh si valide dans PDF Scrape '
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.prix_kwh_tarif_bleu_base
+    trigger: state
+  conditions:
+  - condition: template
+    value_template: '{{ not states(''sensor.prix_kwh_tarif_bleu_base'') in [''unavailable'',
+      ''unknown''] }}
+
+      '
+  actions:
+  - target:
+      entity_id: input_number.prix_kwh_tarif_bleu_base_dashboard_energy
+    data:
+      value: '{{ states(''sensor.prix_kwh_tarif_bleu_base'') }}'
+    action: input_number.set_value
+- id: '1792083293970'
+  alias: Garderie - enregistrer réservation
+  triggers:
+  - trigger: event
+    event_type: imap_content
+  conditions:
+  - condition: template
+    value_template: "{{ 'reservation de garderie' in trigger.event.data['text']\n
+      \  and 'validee' in trigger.event.data['text'] }}"
+  actions:
+  - condition: template
+    value_template: '{{ m | length > 0 }}'
+  - action: calendar.create_event
+    target:
+      entity_id: calendar.garderie
+    data:
+      summary: Garderie chiens
+      start_date_time: '{{ m[0][0] }} {{ m[0][1] }}:00'
+      end_date_time: '{{ m[0][0] }} {{ m[0][2] }}:00'
+  variables:
+    m: "{{ trigger.event.data['text'] | regex_findall(\n   'du (\\d{4}-\\d{2}-\\d{2})
+      de (\\d{2}:\\d{2}):\\d{2} \\S+ (\\d{2}:\\d{2}):\\d{2}') }}"
+  mode: queued
+- id: '1792084079954'
+  alias: Clim voiture avant départ
+  triggers:
+  - trigger: calendar
+    event: start
+    entity_id: calendar.edt_damien
+    offset: '-1:20:0'
+    id: normal
+  - trigger: calendar
+    event: start
+    entity_id: calendar.garderie
+    offset: -0:25:0
+    id: garderie
+  conditions:
+  - condition: template
+    value_template: '{% set t = states(''sensor.capteur_temperature_cabanon_temperature'')
+      %} {{ is_number(t) and (t | float < 8 or t | float > 25) }}
+
+      '
+  actions:
+  - action: calendar.get_events
+    target:
+      entity_id: calendar.edt_damien
+    data:
+      start_date_time: '{{ today_at(''00:00'') }}'
+      end_date_time: '{{ today_at(''23:59'') }}'
+    response_variable: edt
+  - action: calendar.get_events
+    target:
+      entity_id: calendar.garderie
+    data:
+      start_date_time: '{{ today_at(''00:00'') }}'
+      end_date_time: '{{ today_at(''23:59'') }}'
+    response_variable: garderie
+  - variables:
+      cours_starts: "{{ edt['calendar.edt_damien'].events\n   | rejectattr('summary',
+        'match', 'Classe absente|Cours annulé')\n   | selectattr('start', 'search',
+        'T')\n   | map(attribute='start') | map('as_datetime') | list }}\n"
+      annule: "{{ garderie['calendar.garderie'].events\n   | selectattr('summary',
+        'eq', 'Garderie annulée') | list | length > 0 }}\n"
+      garderie_starts: "{{ [] if annule else (garderie['calendar.garderie'].events\n
+        \  | selectattr('summary', 'eq', 'Garderie chiens')\n   | map(attribute='start')
+        | map('as_datetime') | list) }}\n"
+      garderie_perso: "{{ garderie_starts | length > 0\n   and (cours_starts | length
+        == 0\n        or (garderie_starts | min) <= (cours_starts | min)) }}\n"
+  - condition: template
+    value_template: "{% if trigger.id == 'normal' %}\n  {{ not garderie_perso\n     and
+      cours_starts | length > 0\n     and (cours_starts | min) == as_datetime(trigger.calendar_event.start)
+      }}\n{% else %}\n  {{ garderie_perso\n     and (garderie_starts | min) == as_datetime(trigger.calendar_event.start)
+      }}\n{% endif %}\n"
+  - action: renault.ac_start
+    data:
+      vehicle: 592077a357510b5b9fd450e4a9514d34
+      temperature: 18
+  mode: single
+- id: '1792084304075'
+  alias: Rafraîchir EDT Pronote
+  triggers:
+  - trigger: time
+    at: 05:00:00
+  actions:
+  - action: homeassistant.update_entity
+    target:
+      entity_id: calendar.edt_damien
+  mode: single
+- id: '1792088905400'
+  alias: Garderie - enregistrer annulation
+  triggers:
+  - trigger: event
+    event_type: imap_content
+  conditions:
+  - condition: template
+    value_template: "{{ 'reservation de garderie' in trigger.event.data['text']\n
+      \  and 'supprimee' in trigger.event.data['text'] }}"
+  actions:
+  - condition: template
+    value_template: '{{ m | length > 0 }}'
+  - action: calendar.create_event
+    target:
+      entity_id: calendar.garderie
+    data:
+      summary: Garderie annulée
+      start_date_time: '{{ m[0] }} 07:24:00'
+      end_date_time: '{{ m[0] }} 07:25:00'
+  variables:
+    m: '{{ trigger.event.data[''text''] | regex_findall(''du (\d{4}-\d{2}-\d{2}) a
+      ete'') }}'
+  mode: queued
